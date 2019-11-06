@@ -17,12 +17,18 @@ build:
 run:
 	@docker-compose exec dev make local/run
 
+test:
+	@docker-compose exec dev make local/test
+
 local/build:
 	mkdir -p build
 	cd $(TARGET_DIR) && cmake $(shell pwd) && make --no-print-directory
 
 local/run:
 	@./$(TARGET_DIR)/$(TARGET)
+
+local/test:
+	cd $(TARGET_DIR) && ctest --verbose
 
 docker/build: docker-compose.yml
 	docker-compose build
@@ -36,5 +42,5 @@ docker/down:
 docker/sh:
 	docker-compose exec dev /bin/bash
 
-.PHONY: init up down sh build run
+.PHONY: init up down sh build run test
 .PHONY: local/* docker/*
