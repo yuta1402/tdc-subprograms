@@ -1,0 +1,66 @@
+version: 2
+jobs:
+  pre_images:
+    machine: true
+    steps:
+      - checkout
+      - restore_cache:
+          key: docker-{{ checksum ".circleci/config.yml" }}-{{ checksum "docker-compose.yml" }}-{{ checksum "Dockerfile" }}
+          paths: ~/caches/images.tar
+      - run:
+          name: Check cache images
+          command: |
+            if [ ! -f ~/caches/images.tar ]; then
+              make docker/build
+              mkdir -p ~/caches
+              docker save $(docker images | awk 'NR>=2 && ! /^<none>/{print $1}') -o ~/caches/images.tar
+            fi
+      - save_cache:
+          key: docker-{{ checksum ".circleci/config.yml" }}-{{ checksum "docker-compose.yml" }}-{{ checksum "Dockerfile" }}
+          paths: ~/caches/images.tar
+  build:
+    machine: true
+    steps:
+      - checkout
+      - restore_cache:
+          key: docker-{{ checksum ".circleci/config.yml" }}-{{ checksum "docker-compose.yml" }}-{{ checksum "Dockerfile" }}
+          paths: ~/caches/images.tar
+      - run:
+          name: Load docker images
+          command: docker load -i ~/caches/images.tar
+      - run:
+          name: Docker up
+          command: make docker/up
+      - run:
+          name: Build
+          command: make build
+  test:
+    machine: true
+    steps:
+      - checkout
+      - restore_cache:
+          key: docker-{{ checksum ".circleci/config.yml" }}-{{ checksum "docker-compose.yml" }}-{{ checksum "Dockerfile" }}
+          paths: ~/caches/images.tar
+      - run:
+          name: Load docker images
+          command: docker load -i ~/caches/images.tar
+      - run:
+          name: Docker up
+          command: make docker/up
+      - run:
+          name: Build
+          command: make build
+      - run:
+          name: Test
+          command: make test
+workflows:
+  version: 2
+  main:
+    jobs:
+      - pre_images
+      - build:
+          requires:
+            - pre_images
+      - test:
+          requires:
+            - build
