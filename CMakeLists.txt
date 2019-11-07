@@ -19,14 +19,12 @@ set(source_dir ./src)
 
 include_directories("./include")
 
-add_subdirectory(${source_dir}/hs)
 add_subdirectory(${source_dir}/channel)
 
 add_executable(${target} ${source_dir}/main.cpp)
 
 target_link_libraries(${target}
     ${CMAKE_THREAD_LIBS_INIT}
-    hs
 )
 
 enable_testing()
