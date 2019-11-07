@@ -1,3 +1,4 @@
+#include "estd/random.hpp"
 #include "test.hpp"
 #include "channel/tdc.hpp"
 
@@ -217,10 +218,36 @@ void tdc_generate_received_word_test()
     }
 }
 
+void tdc_send_test()
+{
+    channel::TDCParams params;
+
+    params.drift_stddev = 5.0;
+    params.max_drift = 4;
+    params.pass_ratio = 0.8;
+    params.ps = 0.1;
+
+    channel::TDC tdc(params);
+
+    Eigen::RowVectorXi x(100);
+    for (int i = 0; i < x.size(); ++i) {
+        x[i] = estd::Random(0, 1);
+    }
+
+    auto z = tdc.send(x);
+
+    for (int i = 0; i < z.size(); ++i) {
+        eassert(z[i] == 0 || z[i] == 1, "z[%d] == %d", i, z[i]);
+    }
+
+    eassert(z.size() == x.size(), "z.size() == %ld, x.size() == %ld", z.size(), x.size());
+}
+
 void tdc_test()
 {
     tdc_generate_next_drift_value_test();
     tdc_generate_drift_sequence_test();
     tdc_generate_signal_sequence_test();
     tdc_generate_received_word_test();
+    tdc_send_test();
 }
