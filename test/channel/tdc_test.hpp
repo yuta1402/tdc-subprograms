@@ -123,6 +123,65 @@ void tdc_generate_drift_sequence_test()
 
 void tdc_generate_signal_sequence_test()
 {
+    {
+        channel::TDCParams params;
+
+        params.pass_ratio = 0.8;
+        params.drift_stddev = 5.0;
+        params.max_drift = 4;
+
+        channel::TDC tdc(params);
+
+        Eigen::RowVectorXi x(11);
+        x << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+
+        Eigen::RowVectorXd d(11);
+        d << -0.5, -0.4, -0.3, -0.2, -0.1, 0.0, -0.1, 0.2, -0.3, 0.4, 0.5;
+
+        auto y = tdc.generate_signal_sequence(x, d);
+
+        eassert(y[ 0] == 2, "y[ 0] == %d", y[ 0]);
+        eassert(y[ 1] == 2, "y[ 1] == %d", y[ 1]);
+        eassert(y[ 2] == 0, "y[ 2] == %d", y[ 2]);
+        eassert(y[ 3] == 0, "y[ 3] == %d", y[ 3]);
+        eassert(y[ 4] == 0, "y[ 4] == %d", y[ 4]);
+        eassert(y[ 5] == 0, "y[ 5] == %d", y[ 5]);
+        eassert(y[ 6] == 0, "y[ 6] == %d", y[ 6]);
+        eassert(y[ 7] == 0, "y[ 7] == %d", y[ 7]);
+        eassert(y[ 8] == 0, "y[ 8] == %d", y[ 8]);
+        eassert(y[ 9] == 2, "y[ 9] == %d", y[ 9]);
+        eassert(y[10] == 2, "y[10] == %d", y[10]);
+    }
+
+    {
+        channel::TDCParams params;
+
+        params.pass_ratio = 0.8;
+        params.drift_stddev = 5.0;
+        params.max_drift = 4;
+
+        channel::TDC tdc(params);
+
+        Eigen::RowVectorXi x(11);
+        x << 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0;
+
+        Eigen::RowVectorXd d(11);
+        d << 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0;
+
+        auto y = tdc.generate_signal_sequence(x, d);
+
+        eassert(y[ 0] == 2, "y[ 0] == %d", y[ 0]);
+        eassert(y[ 1] == 0, "y[ 1] == %d", y[ 1]);
+        eassert(y[ 2] == 1, "y[ 2] == %d", y[ 2]);
+        eassert(y[ 3] == 0, "y[ 3] == %d", y[ 3]);
+        eassert(y[ 4] == 1, "y[ 4] == %d", y[ 4]);
+        eassert(y[ 5] == 2, "y[ 5] == %d", y[ 5]);
+        eassert(y[ 6] == 2, "y[ 6] == %d", y[ 6]);
+        eassert(y[ 7] == 2, "y[ 7] == %d", y[ 7]);
+        eassert(y[ 8] == 2, "y[ 8] == %d", y[ 8]);
+        eassert(y[ 9] == 1, "y[ 9] == %d", y[ 9]);
+        eassert(y[10] == 0, "y[10] == %d", y[10]);
+    }
 }
 
 void tdc_generate_received_word_test()
