@@ -16,7 +16,7 @@ void tdc_generate_next_drift_value_test()
         channel::TDC tdc(params);
 
         for (int i = 0; i < 100; ++i) {
-            double nd = tdc.generate_next_drift_value(0.0); eassert(abs(nd) <= 1.0-params.pass_ratio, "abs(nd) == %lf, 1.0-pass_ratio == %lf", abs(nd), 1.0-params.pass_ratio);
+            double nd = tdc.generate_next_drift_value(0.0); eassert(-1.0 <= nd && nd <= 1.0, "nd == %lf", nd);
         }
     }
 
@@ -26,7 +26,7 @@ void tdc_generate_next_drift_value_test()
         channel::TDC tdc(params);
 
         for (int i = 0; i < 100; ++i) {
-            double nd = tdc.generate_next_drift_value(0.0); eassert(abs(nd) <= 1.0-params.pass_ratio, "abs(nd) == %lf, 1.0-pass_ratio == %lf", abs(nd), 1.0-params.pass_ratio);
+            double nd = tdc.generate_next_drift_value(0.0); eassert(-0.5 <= nd && nd <= 0.5, "nd == %lf", nd);
         }
     }
 
@@ -47,6 +47,50 @@ void tdc_generate_next_drift_value_test()
 
         for (int i = 0; i < 100; ++i) {
             double nd = tdc.generate_next_drift_value(0.0); eassert(nd == 0.0, "nd == %lf", nd);
+        }
+    }
+
+    // start from di=1.0
+    {
+        params.pass_ratio = 0.0;
+
+        channel::TDC tdc(params);
+
+        for (int i = 0; i < 100; ++i) {
+            double nd = tdc.generate_next_drift_value(1.0); eassert(0.0 <= nd && nd <= 2.0, "nd == %lf", nd);
+        }
+    }
+
+    // start from di=-1.0
+    {
+        params.pass_ratio = 0.0;
+
+        channel::TDC tdc(params);
+
+        for (int i = 0; i < 100; ++i) {
+            double nd = tdc.generate_next_drift_value(-1.0); eassert(-2.0 <= nd && nd <= 0.0, "nd == %lf", nd);
+        }
+    }
+
+    // start from positive bounrdary (D=4.0)
+    {
+        params.pass_ratio = 0.0;
+
+        channel::TDC tdc(params);
+
+        for (int i = 0; i < 100; ++i) {
+            double nd = tdc.generate_next_drift_value(4.0); eassert(3.0 <= nd && nd <= 4.0, "nd == %lf", nd);
+        }
+    }
+
+    // start from negative bounrdary (D=-4.0)
+    {
+        params.pass_ratio = 0.0;
+
+        channel::TDC tdc(params);
+
+        for (int i = 0; i < 100; ++i) {
+            double nd = tdc.generate_next_drift_value(-4.0); eassert(-4.0 <= nd && nd <= -3.0, "nd == %lf", nd);
         }
     }
 }
