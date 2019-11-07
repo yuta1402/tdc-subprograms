@@ -13,15 +13,11 @@ namespace channel
     */
     struct TDCParams
     {
-        double pi;
-        double pd;
         double ps;
-
         double pass_ratio;
         double drift_stddev;
 
         int max_drift;
-        int num_segments;
     };
 
     /*!
