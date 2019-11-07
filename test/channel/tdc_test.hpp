@@ -186,6 +186,35 @@ void tdc_generate_signal_sequence_test()
 
 void tdc_generate_received_word_test()
 {
+    {
+        channel::TDCParams params;
+        params.ps = 0.0;
+
+        Eigen::RowVectorXi y(10);
+        y << 2, 2, 0, 0, 0, 0, 0, 0, 2, 2;
+
+        channel::TDC tdc(params);
+        auto z = tdc.generate_received_word(y);
+
+        for (int i = 2; i <= 7; ++i) {
+            eassert(z[i] == 0, "z[%d] == %d", i, z[i]);
+        }
+    }
+
+    {
+        channel::TDCParams params;
+        params.ps = 1.0;
+
+        Eigen::RowVectorXi y(10);
+        y << 2, 2, 0, 0, 0, 0, 0, 0, 2, 2;
+
+        channel::TDC tdc(params);
+        auto z = tdc.generate_received_word(y);
+
+        for (int i = 2; i <= 7; ++i) {
+            eassert(z[i] == 1, "z[%d] == %d", i, z[i]);
+        }
+    }
 }
 
 void tdc_test()
