@@ -5,3 +5,4 @@ include_directories(
 )
 
 add_subdirectory("./hello")
+add_subdirectory("./channel")
