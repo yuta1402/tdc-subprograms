@@ -5,9 +5,7 @@ void tdc_generate_next_drift_value_test()
 {
     channel::TDCParams params;
 
-    params.ps = 0.1;
     params.drift_stddev = 5.0;
-
     params.max_drift = 4;
 
     {
@@ -97,6 +95,30 @@ void tdc_generate_next_drift_value_test()
 
 void tdc_generate_drift_sequence_test()
 {
+    channel::TDCParams params;
+
+    params.drift_stddev = 5.0;
+    params.max_drift = 4;
+
+    {
+        params.pass_ratio = 1.0;
+        channel::TDC tdc(params);
+
+        auto d = tdc.generate_drift_sequence(100);
+        for (int i = 0; i < d.size(); ++i) {
+            eassert(d[i] == 0.0, "%lf", d[i]);
+        }
+    }
+
+    {
+        params.pass_ratio = 0.0;
+        channel::TDC tdc(params);
+
+        auto d = tdc.generate_drift_sequence(100);
+        for (int i = 0; i < d.size(); ++i) {
+            eassert(-params.max_drift <= d[i] && d[i] <= params.max_drift, "d[%d] == %lf, max_drift == %d", i, d[i], params.max_drift);
+        }
+    }
 }
 
 void tdc_generate_signal_sequence_test()
