@@ -107,10 +107,6 @@ namespace channel
         auto y = generate_signal_sequence(x, d);
         auto z = generate_received_word(y);
 
-        std::cout << d << std::endl;
-        std::cout << y << std::endl;
-        std::cout << z << std::endl;
-
         return z;
     }
 }
