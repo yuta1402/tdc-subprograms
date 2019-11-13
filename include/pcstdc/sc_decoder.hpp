@@ -1,8 +1,14 @@
 #ifndef PCSTDC_SC_DECODER_HPP
 #define PCSTDC_SC_DECODER_HPP
 
+#include <vector>
+#include <array>
+#include <Eigen/Core>
+#include "estd/negative_index_vector.hpp"
 #include "channel/tdc.hpp"
 #include "pcstdc/drift_transition_prob.hpp"
+#include "pcstdc/info_table_handler.hpp"
+#include "pcstdc/rec_calculation_element.hpp"
 
 /*!
 @namespace pcstdc
@@ -25,15 +31,24 @@ namespace pcstdc
     class SCDecoder
     {
     public:
+        using InfoTable = InfoTableHandler;
+        using RecCalculations = std::vector<std::vector<estd::nivector<estd::nivector<std::array<RecCalculationElement, 2>>>>>;
+
+    public:
         SCDecoder(const SCDecoderParams& params, const channel::TDC& tdc);
         ~SCDecoder() = default;
 
         // TODO: Implement
 
+        long double calc_level0(const int a, const int da, const int db, const int xi, const Eigen::RowVectorXi& y);
+        long double calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& y);
+
     private:
         SCDecoderParams params_;
         channel::TDC tdc_;
+
         DriftTransitionProb drift_transition_prob_;
+        RecCalculations rec_calculations_;
     };
 }
 
