@@ -42,9 +42,9 @@ namespace pcstdc
         // TODO: Implement
 
         // daとdbの差による刈り込み
-        if (abs(db-da) > (1 << k)) {
-            return 0.0;
-        }
+        // if (abs(db-da) > (1 << k)) {
+        //     return 0.0;
+        // }
 
         // 過去に同じ引数で呼び出しがあった場合は保存した結果を返す
         const int m = a / (1 << k);
@@ -63,18 +63,21 @@ namespace pcstdc
 
         const int j = i/2;
         const int g = (a+b)/2;
-        const int max_d = tdc_.params().max_drift;
+        const int max_segment = tdc_.params().max_drift * params_.num_segments;
 
         if (i % 2 == 0) {
             long double r = 0;
 
-            for (int dg = -2*max_d; dg <= 2*max_d; ++dg) {
-                for (int next_u = 0; next_u <= 1; ++next_u) {
-                    u[k-1][a+j] = (u[k][a+2*j] + next_u) % 2;
-                    const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg, u, y);
-                    u[k-1][g+j] = next_u;
-                    const long double wg = calc_likelihood_rec(j, k-1, g, b, dg, db, u, y);
-                    r += wb * wg;
+            // dg0: d_{g-1}, dg1: d_{g}
+            for (int dg0 = -max_segment; dg0 <= max_segment; ++dg0) {
+                for (int dg1 = -max_segment; dg1 <= max_segment; ++dg1) {
+                    for (int next_u = 0; next_u <= 1; ++next_u) {
+                        u[k-1][a+j] = (u[k][a+2*j] + next_u) % 2;
+                        const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, y);
+                        u[k-1][g+j] = next_u;
+                        const long double wg = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, y);
+                        r += wb * wg * drift_transition_prob_(dg1, dg0);
+                    }
                 }
             }
             // r *= 0.5;
@@ -86,12 +89,15 @@ namespace pcstdc
 
         long double r = 0;
 
-        for (int dg = -2*max_d; dg <= 2*max_d; ++dg) {
-            u[k-1][a+j] = (u[k][a+2*j] + u[k][a+2*j+1]) % 2;
-            const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg, u, y);
-            u[k-1][g+j] = u[k][a+2*j+1];
-            const long double wg = calc_likelihood_rec(j, k-1, g, b, dg, db, u, y);
-            r += wb * wg;
+        // dg0: d_{g-1}, dg1: d_{g}
+        for (int dg0 = -max_segment; dg0 <= max_segment; ++dg0) {
+            for (int dg1 = -max_segment; dg1 <= max_segment; ++dg1) {
+                u[k-1][a+j] = (u[k][a+2*j] + u[k][a+2*j+1]) % 2;
+                const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, y);
+                u[k-1][g+j] = u[k][a+2*j+1];
+                const long double wg = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, y);
+                r += wb * wg * drift_transition_prob_(dg1, dg0);
+            }
         }
         // r *= 0.5;
 
