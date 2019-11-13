@@ -10,10 +10,31 @@ namespace pcstdc
     {
     }
 
-    long double SCDecoder::calc_level0(const int a, const int da, const int db, const int xi, const Eigen::RowVectorXi& y)
+    long double SCDecoder::calc_level0(const int a, const int da, const int xa, const Eigen::RowVectorXi& z)
     {
-        // TODO: Implement
-        return 0.0;
+        const double real_da = static_cast<double>(da) / params_.num_segments;
+        const int rounded_da = std::floor(real_da + 0.5);
+        const double rest_da = real_da - rounded_da;
+
+        const int j = a + rounded_da;
+
+        if (j < 0 || static_cast<int>(params_.code_length) <= j) {
+            return 0.5;
+        }
+
+        const double pass_ratio_bound = tdc_.params().pass_ratio * 0.5;
+        if (rest_da <= -pass_ratio_bound || pass_ratio_bound <= rest_da) {
+            return 0.5;
+        }
+
+        double p = 0.0;
+        if (xa == z[j]) {
+            p = 1.0 - tdc_.params().ps;
+        } else {
+            p = tdc_.params().ps;
+        }
+
+        return p;
     }
 
     long double SCDecoder::calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& y)
@@ -34,7 +55,7 @@ namespace pcstdc
 
         // calc_all_level0で計算済みなので呼ばれることはないが念の為記述
         if (k == 0) {
-            const long double r = calc_level0(a, da, db, u[0][a], y);
+            const long double r = calc_level0(a, da, u[0][a], y);
             rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
             rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
             return r;
