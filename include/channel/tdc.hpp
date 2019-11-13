@@ -39,6 +39,8 @@ namespace channel
 
         Eigen::RowVectorXi send(const Eigen::RowVectorXi& x);
 
+        const TDCParams& params() const { return params_; }
+
     private:
         TDCParams params_;
     };
