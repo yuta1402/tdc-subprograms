@@ -41,6 +41,7 @@ namespace pcstdc
         // TODO: Implement
 
         long double calc_level0(const int a, const int da, const int xa, const Eigen::RowVectorXi& z);
+        long double calc_level1(const int i, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z);
         long double calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& y);
 
     private:

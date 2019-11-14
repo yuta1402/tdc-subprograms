@@ -59,7 +59,13 @@ void sc_decoder_calc_level0_test()
     }
 }
 
+void sc_decoder_calc_level1_test()
+{
+    // TODO: Implement
+}
+
 void sc_decoder_test()
 {
     sc_decoder_calc_level0_test();
+    sc_decoder_calc_level1_test();
 }

@@ -37,6 +37,39 @@ namespace pcstdc
         return p;
     }
 
+    long double SCDecoder::calc_level1(const int i, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z)
+    {
+        const int j = i / 2;
+        const int g = (a + b) / 2;
+        const int k = 1;
+
+        if (i % 2 == 0) {
+            long double r = 0;
+
+            for (int next_u = 0; next_u <= 1; ++next_u) {
+                u[k-1][a+j] = (u[k][a+2*j] + next_u) % 2;
+                const long double wb = calc_level0(a, da, u[k-1][a+j], z);
+                u[k-1][g+j] = next_u;
+                const long double wg = calc_level0(g, db, u[k-1][g+j], z);
+                r += wb * wg * drift_transition_prob_(db, da);
+            }
+            // r *= 0.5;
+
+            return r;
+        }
+
+        long double r = 0;
+
+        u[k-1][a+j] = (u[k][a+2*j] + u[k][a+2*j+1]) % 2;
+        const long double wb = calc_level0(a, da, u[k-1][a+j], z);
+        u[k-1][g+j] = u[k][a+2*j+1];
+        const long double wg = calc_level0(g, db, u[k-1][g+j], z);
+        r += wb * wg * drift_transition_prob_(db, da);
+        // r *= 0.5;
+
+        return r;
+    }
+
     long double SCDecoder::calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& y)
     {
         // TODO: Implement
