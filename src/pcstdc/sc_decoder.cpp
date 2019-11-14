@@ -70,7 +70,7 @@ namespace pcstdc
         return r;
     }
 
-    long double SCDecoder::calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& y)
+    long double SCDecoder::calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z)
     {
         // TODO: Implement
 
@@ -88,7 +88,7 @@ namespace pcstdc
 
         // calc_all_level0で計算済みなので呼ばれることはないが念の為記述
         if (k == 0) {
-            const long double r = calc_level0(a, da, u[0][a], y);
+            const long double r = calc_level0(a, da, u[0][a], z);
             rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
             rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
             return r;
@@ -106,9 +106,9 @@ namespace pcstdc
                 for (int dg1 = -max_segment; dg1 <= max_segment; ++dg1) {
                     for (int next_u = 0; next_u <= 1; ++next_u) {
                         u[k-1][a+j] = (u[k][a+2*j] + next_u) % 2;
-                        const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, y);
+                        const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
                         u[k-1][g+j] = next_u;
-                        const long double wg = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, y);
+                        const long double wg = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, z);
                         r += wb * wg * drift_transition_prob_(dg1, dg0);
                     }
                 }
@@ -126,9 +126,9 @@ namespace pcstdc
         for (int dg0 = -max_segment; dg0 <= max_segment; ++dg0) {
             for (int dg1 = -max_segment; dg1 <= max_segment; ++dg1) {
                 u[k-1][a+j] = (u[k][a+2*j] + u[k][a+2*j+1]) % 2;
-                const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, y);
+                const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
                 u[k-1][g+j] = u[k][a+2*j+1];
-                const long double wg = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, y);
+                const long double wg = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, z);
                 r += wb * wg * drift_transition_prob_(dg1, dg0);
             }
         }
