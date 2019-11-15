@@ -86,9 +86,8 @@ namespace pcstdc
         //     return dp.value;
         // }
 
-        // calc_all_level0で計算済みなので呼ばれることはないが念の為記述
-        if (k == 0) {
-            const long double r = calc_level0(a, da, u[0][a], z);
+        if (k == 1) {
+            const long double r = calc_level1(i, a, b, da, db, u, z);
             // rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
             // rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
             return r;
