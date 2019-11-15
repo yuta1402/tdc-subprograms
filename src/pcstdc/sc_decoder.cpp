@@ -80,17 +80,17 @@ namespace pcstdc
         // }
 
         // 過去に同じ引数で呼び出しがあった場合は保存した結果を返す
-        const int m = a / (1 << k);
-        const auto& dp = rec_calculations_[k][m][da][db][u[k][a+i]];
-        if (dp.prev_index == i && dp.value != -1.0) {
-            return dp.value;
-        }
+        // const int m = a / (1 << k);
+        // const auto& dp = rec_calculations_[k][m][da][db][u[k][a+i]];
+        // if (dp.prev_index == i && dp.value != -1.0) {
+        //     return dp.value;
+        // }
 
         // calc_all_level0で計算済みなので呼ばれることはないが念の為記述
         if (k == 0) {
             const long double r = calc_level0(a, da, u[0][a], z);
-            rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
-            rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
+            // rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
+            // rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
             return r;
         }
 
@@ -115,8 +115,8 @@ namespace pcstdc
             }
             // r *= 0.5;
 
-            rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
-            rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
+            // rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
+            // rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
             return r;
         }
 
@@ -134,8 +134,8 @@ namespace pcstdc
         }
         // r *= 0.5;
 
-        rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
-        rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
+        // rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
+        // rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
         return r;
     }
 }
