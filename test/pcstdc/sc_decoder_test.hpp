@@ -1,6 +1,7 @@
 #include "test.hpp"
 #include "channel/tdc.hpp"
 #include "pcstdc/sc_decoder.hpp"
+#include "pcstdc/polar_encoder.hpp"
 
 void sc_decoder_calc_level0_test()
 {

@@ -1,17 +1,17 @@
 #include <iostream>
-#include "pcstdc/polar_code_encoder.hpp"
+#include "pcstdc/polar_encoder.hpp"
 #include "estd/random.hpp"
 
 namespace pcstdc
 {
-    PolarCodeEncoder::PolarCodeEncoder(const size_t code_length, const size_t info_length, const std::vector<int>& frozen_bits) :
+    PolarEncoder::PolarEncoder(const size_t code_length, const size_t info_length, const std::vector<int>& frozen_bits) :
         code_length_{ code_length },
         info_length_{ info_length },
         frozen_bits_{ frozen_bits }
     {
     }
 
-    Eigen::RowVectorXi PolarCodeEncoder::encode(const Eigen::RowVectorXi& m) const
+    Eigen::RowVectorXi PolarEncoder::encode(const Eigen::RowVectorXi& m) const
     {
         Eigen::RowVectorXi z = Eigen::RowVectorXi::Zero(code_length_);
 
@@ -41,7 +41,7 @@ namespace pcstdc
         return z;
     }
 
-    Eigen::RowVectorXi PolarCodeEncoder::make_random_codeword() const
+    Eigen::RowVectorXi PolarEncoder::make_random_codeword() const
     {
         Eigen::RowVectorXi m = Eigen::RowVectorXi::Zero(info_length_);
 

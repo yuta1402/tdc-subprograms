@@ -1,14 +1,14 @@
 #include <vector>
 #include "test.hpp"
-#include "pcstdc/polar_code_encoder.hpp"
+#include "pcstdc/polar_encoder.hpp"
 
-void encode_test()
+void polar_encoder_encode_test()
 {
     std::vector<int> frozen_bits{ 0, 0, 1, 0, 1, 1, 1, 0 };
     size_t n = 8;
     size_t k = 4;
 
-    pcstdc::PolarCodeEncoder encoder(n, k, frozen_bits);
+    pcstdc::PolarEncoder encoder(n, k, frozen_bits);
 
     Eigen::RowVectorXi m(k);
     m << 1, 0, 1, 1;
@@ -22,13 +22,7 @@ void encode_test()
     }
 }
 
-void make_random_codeword_test()
+void polar_encoder_test()
 {
-    // TODO: Implement test
-}
-
-void polar_code_encoder_test()
-{
-    encode_test();
-    make_random_codeword_test();
+    polar_encoder_encode_test();
 }
