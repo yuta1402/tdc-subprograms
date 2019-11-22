@@ -64,8 +64,31 @@ void sc_decoder_calc_level1_test()
     // TODO: Implement
 }
 
+void sc_decoder_decode_test()
+{
+    channel::TDCParams tdc_params;
+    tdc_params.pass_ratio = 0.8;
+    tdc_params.drift_stddev = 1.0;
+    tdc_params.max_drift = 2;
+    tdc_params.ps = 0.0;
+
+    pcstdc::SCDecoderParams decoder_params;
+    decoder_params.code_length = 4;
+    decoder_params.info_length = 2;
+    decoder_params.num_segments = 2;
+    decoder_params.frozen_bits = {1, 1, 0, 0};
+
+    pcstdc::SCDecoder decoder(decoder_params, tdc_params);
+
+    Eigen::RowVectorXi z(4);
+    z << 0, 0, 1, 1;
+
+    std::cout << decoder.decode(z) << std::endl;
+}
+
 void sc_decoder_test()
 {
     sc_decoder_calc_level0_test();
     sc_decoder_calc_level1_test();
+    sc_decoder_decode_test();
 }
