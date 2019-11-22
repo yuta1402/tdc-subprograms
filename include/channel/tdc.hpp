@@ -32,12 +32,12 @@ namespace channel
         TDC(const TDCParams& params);
         ~TDC() = default;
 
-        double generate_next_drift_value(const double di);
-        Eigen::RowVectorXd generate_drift_sequence(const size_t code_length);
-        Eigen::RowVectorXi generate_signal_sequence(const Eigen::RowVectorXi& x,const Eigen::RowVectorXd& d);
-        Eigen::RowVectorXi generate_received_word(const Eigen::RowVectorXi& y);
+        double generate_next_drift_value(const double di) const;
+        Eigen::RowVectorXd generate_drift_sequence(const size_t code_length) const;
+        Eigen::RowVectorXi generate_signal_sequence(const Eigen::RowVectorXi& x,const Eigen::RowVectorXd& d) const;
+        Eigen::RowVectorXi generate_received_word(const Eigen::RowVectorXi& y) const;
 
-        Eigen::RowVectorXi send(const Eigen::RowVectorXi& x);
+        Eigen::RowVectorXi send(const Eigen::RowVectorXi& x) const;
 
         const TDCParams& params() const { return params_; }
 

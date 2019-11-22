@@ -18,7 +18,7 @@ namespace channel
         params_{ params }
     {}
 
-    double TDC::generate_next_drift_value(const double di)
+    double TDC::generate_next_drift_value(const double di) const
     {
         if (params_.pass_ratio >= 1.0) {
             return di;
@@ -43,7 +43,7 @@ namespace channel
         return nd;
     }
 
-    Eigen::RowVectorXd TDC::generate_drift_sequence(const size_t code_length)
+    Eigen::RowVectorXd TDC::generate_drift_sequence(const size_t code_length) const
     {
         Eigen::RowVectorXd d(code_length);
         d[0] = 0.0;
@@ -55,7 +55,7 @@ namespace channel
         return d;
     }
 
-    Eigen::RowVectorXi TDC::generate_signal_sequence(const Eigen::RowVectorXi& x,const Eigen::RowVectorXd& d)
+    Eigen::RowVectorXi TDC::generate_signal_sequence(const Eigen::RowVectorXi& x,const Eigen::RowVectorXd& d) const
     {
         const size_t code_length = x.size();
         Eigen::RowVectorXi y = Eigen::RowVectorXi::Constant(code_length, 2);
@@ -77,7 +77,7 @@ namespace channel
         return y;
     }
 
-    Eigen::RowVectorXi TDC::generate_received_word(const Eigen::RowVectorXi& y)
+    Eigen::RowVectorXi TDC::generate_received_word(const Eigen::RowVectorXi& y) const
     {
         const size_t code_length = y.size();
         Eigen::RowVectorXi z(code_length);
@@ -99,7 +99,7 @@ namespace channel
         return z;
     }
 
-    Eigen::RowVectorXi TDC::send(const Eigen::RowVectorXi& x)
+    Eigen::RowVectorXi TDC::send(const Eigen::RowVectorXi& x) const
     {
         const size_t code_length = x.size();
 
