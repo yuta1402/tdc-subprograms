@@ -67,6 +67,10 @@ void sc_decoder_calc_level1_test()
 
 void sc_decoder_decode_test()
 {
+    const size_t code_length = 4;
+    const size_t info_length = 2;
+    const std::vector<int> frozen_bits{ 1, 1, 0, 0 };
+
     channel::TDCParams tdc_params;
     tdc_params.pass_ratio = 0.8;
     tdc_params.drift_stddev = 1.0;
@@ -74,17 +78,55 @@ void sc_decoder_decode_test()
     tdc_params.ps = 0.0;
 
     pcstdc::SCDecoderParams decoder_params;
-    decoder_params.code_length = 4;
-    decoder_params.info_length = 2;
+    decoder_params.code_length = code_length;
+    decoder_params.info_length = info_length;
     decoder_params.num_segments = 2;
-    decoder_params.frozen_bits = {1, 1, 0, 0};
+    decoder_params.frozen_bits = frozen_bits;
 
+    pcstdc::PolarEncoder encoder(code_length, info_length, frozen_bits);
     pcstdc::SCDecoder decoder(decoder_params, tdc_params);
 
-    Eigen::RowVectorXi z(4);
-    z << 0, 0, 1, 1;
+    Eigen::RowVectorXi m(2);
 
-    std::cout << decoder.decode(z) << std::endl;
+    {
+        m << 0, 0;
+        auto x = encoder.encode(m);
+        auto m_hat = decoder.decode(x);
+
+        for (int i = 0; i < m.size(); ++i) {
+            eassert(m_hat[i] == m[i], "m_hat[%d] == %d, m[%d] == %d", i, m_hat[i], i, m[i]);
+        }
+    }
+
+    {
+        m << 0, 1;
+        auto x = encoder.encode(m);
+        auto m_hat = decoder.decode(x);
+
+        for (int i = 0; i < m.size(); ++i) {
+            eassert(m_hat[i] == m[i], "m_hat[%d] == %d, m[%d] == %d", i, m_hat[i], i, m[i]);
+        }
+    }
+
+    {
+        m << 1, 0;
+        auto x = encoder.encode(m);
+        auto m_hat = decoder.decode(x);
+
+        for (int i = 0; i < m.size(); ++i) {
+            eassert(m_hat[i] == m[i], "m_hat[%d] == %d, m[%d] == %d", i, m_hat[i], i, m[i]);
+        }
+    }
+
+    {
+        m << 1, 1;
+        auto x = encoder.encode(m);
+        auto m_hat = decoder.decode(x);
+
+        for (int i = 0; i < m.size(); ++i) {
+            eassert(m_hat[i] == m[i], "m_hat[%d] == %d, m[%d] == %d", i, m_hat[i], i, m[i]);
+        }
+    }
 }
 
 void sc_decoder_test()

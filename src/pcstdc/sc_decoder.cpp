@@ -1,5 +1,23 @@
 #include "pcstdc/sc_decoder.hpp"
 
+namespace
+{
+    size_t calc_exponent_code_length(size_t code_length)
+    {
+        if (code_length == 0) {
+            return 0;
+        }
+
+        size_t n = 0;
+        while (code_length) {
+            code_length = code_length >> 1;
+            ++n;
+        }
+
+        return n-1;
+    }
+}
+
 namespace pcstdc
 {
     SCDecoder::SCDecoder(const SCDecoderParams& params, const channel::TDC& tdc) :
@@ -8,6 +26,58 @@ namespace pcstdc
         drift_transition_prob_{ tdc.params().pass_ratio, tdc.params().drift_stddev, tdc.params().max_drift, params.num_segments },
         rec_calculations_{}
     {
+    }
+
+    Eigen::RowVectorXi SCDecoder::decode(const Eigen::RowVectorXi& z)
+    {
+        const size_t code_length = params_.code_length;
+        const size_t info_length = params_.info_length;
+        const auto& frozen_bits = params_.frozen_bits;
+
+        Eigen::RowVectorXi x(code_length);
+        InfoTable u(code_length);
+
+        for (size_t i = 0; i < code_length; ++i) {
+            if (frozen_bits[i]) {
+                x[i] = 0;
+            } else {
+                const long double ll0 = calc_likelihood(i, 0, u, z);
+                const long double ll1 = calc_likelihood(i, 1, u, z);
+
+                if (ll0 >= ll1) {
+                    x[i] = 0;
+                } else {
+                    x[i] = 1;
+                }
+            }
+
+            u.update(i, x[i]);
+        }
+
+        Eigen::RowVectorXi m(info_length);
+        int j = 0;
+        for (size_t i = 0; i < code_length; ++i) {
+            if (!frozen_bits[i]) {
+                m[j] = x[i];
+                ++j;
+            }
+        }
+
+        return m;
+    }
+
+    long double SCDecoder::calc_likelihood(const int i, const int ui, InfoTable& u, const Eigen::RowVectorXi& z)
+    {
+        const size_t n = calc_exponent_code_length(params_.code_length);
+        const int max_segment = tdc_.params().max_drift * params_.num_segments;
+
+        long double ll = 0.0;
+        for (int dn = -max_segment; dn <= max_segment; ++dn) {
+            u[n][i] = ui;
+            ll += calc_likelihood_rec(i, n, 0, params_.code_length, 0, dn, u, z);
+        }
+
+        return ll;
     }
 
     long double SCDecoder::calc_level0(const int a, const int da, const int xa, const Eigen::RowVectorXi& z)

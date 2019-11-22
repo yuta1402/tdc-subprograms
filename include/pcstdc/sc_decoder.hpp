@@ -22,6 +22,7 @@ namespace pcstdc
         size_t info_length;
 
         int num_segments;
+        std::vector<int> frozen_bits;
     };
 
     /*!
@@ -40,6 +41,8 @@ namespace pcstdc
 
         // TODO: Implement
 
+        Eigen::RowVectorXi decode(const Eigen::RowVectorXi& z);
+        long double calc_likelihood(const int i, const int ui, InfoTable& u, const Eigen::RowVectorXi& z);
         long double calc_level0(const int a, const int da, const int xa, const Eigen::RowVectorXi& z);
         long double calc_level1(const int i, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z);
         long double calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z);
