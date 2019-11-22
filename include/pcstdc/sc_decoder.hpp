@@ -22,7 +22,6 @@ namespace pcstdc
         size_t info_length;
 
         int num_segments;
-        std::vector<int> frozen_bits;
     };
 
     /*!
@@ -36,7 +35,7 @@ namespace pcstdc
         using RecCalculations = std::vector<std::vector<estd::nivector<estd::nivector<std::array<RecCalculationElement, 2>>>>>;
 
     public:
-        SCDecoder(const SCDecoderParams& params, const channel::TDC& tdc);
+        SCDecoder(const SCDecoderParams& params, const channel::TDC& tdc, const std::vector<int>& frozen_bits);
         ~SCDecoder() = default;
 
         // TODO: Implement
@@ -50,6 +49,7 @@ namespace pcstdc
     private:
         SCDecoderParams params_;
         channel::TDC tdc_;
+        std::vector<int> frozen_bits_;
 
         DriftTransitionProb drift_transition_prob_;
         RecCalculations rec_calculations_;

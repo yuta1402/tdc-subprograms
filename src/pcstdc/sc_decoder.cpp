@@ -20,9 +20,10 @@ namespace
 
 namespace pcstdc
 {
-    SCDecoder::SCDecoder(const SCDecoderParams& params, const channel::TDC& tdc) :
+    SCDecoder::SCDecoder(const SCDecoderParams& params, const channel::TDC& tdc, const std::vector<int>& frozen_bits) :
         params_{ params },
         tdc_{ tdc },
+        frozen_bits_{ frozen_bits },
         drift_transition_prob_{ tdc.params().pass_ratio, tdc.params().drift_stddev, tdc.params().max_drift, params.num_segments },
         rec_calculations_{}
     {
@@ -32,13 +33,12 @@ namespace pcstdc
     {
         const size_t code_length = params_.code_length;
         const size_t info_length = params_.info_length;
-        const auto& frozen_bits = params_.frozen_bits;
 
         Eigen::RowVectorXi x(code_length);
         InfoTable u(code_length);
 
         for (size_t i = 0; i < code_length; ++i) {
-            if (frozen_bits[i]) {
+            if (frozen_bits_[i]) {
                 x[i] = 0;
             } else {
                 const long double ll0 = calc_likelihood(i, 0, u, z);
@@ -57,7 +57,7 @@ namespace pcstdc
         Eigen::RowVectorXi m(info_length);
         int j = 0;
         for (size_t i = 0; i < code_length; ++i) {
-            if (!frozen_bits[i]) {
+            if (!frozen_bits_[i]) {
                 m[j] = x[i];
                 ++j;
             }

@@ -18,7 +18,9 @@ void sc_decoder_calc_level0_test()
     decoder_params.info_length = 4;
     decoder_params.num_segments = 2;
 
-    pcstdc::SCDecoder decoder(decoder_params, tdc_params);
+    const std::vector<int> frozen_bits{ 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    pcstdc::SCDecoder decoder(decoder_params, tdc_params, frozen_bits);
 
     Eigen::RowVectorXi z(8);
     z << 0, 1, 0, 1, 0, 1, 0, 1;
@@ -81,10 +83,9 @@ void sc_decoder_decode_test()
     decoder_params.code_length = code_length;
     decoder_params.info_length = info_length;
     decoder_params.num_segments = 2;
-    decoder_params.frozen_bits = frozen_bits;
 
     pcstdc::PolarEncoder encoder(code_length, info_length, frozen_bits);
-    pcstdc::SCDecoder decoder(decoder_params, tdc_params);
+    pcstdc::SCDecoder decoder(decoder_params, tdc_params, frozen_bits);
 
     Eigen::RowVectorXi m(2);
 
