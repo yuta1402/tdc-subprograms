@@ -16,25 +16,27 @@
 
 namespace
 {
-    std::string generate_filename(const size_t n, const size_t num_simulation, const channel::TDCParams& params, const double alpha)
+    std::string generate_filename(const size_t n, const size_t num_simulation, const channel::TDCParams& tdc_params, const pcstdc::SCDecoderParams& decoder_params)
     {
         std::stringstream ss;
         ss << "td2c_capacities"
            << "_n" << n
            << "_t" << num_simulation
            << std::defaultfloat
-           << "_" << params.drift_stddev
-           << "_ps" << params.ps
-           << "_md" << params.max_drift
-           << "_a" << alpha
+           << "_" << tdc_params.drift_stddev
+           << "_ps" << tdc_params.ps
+           << "_r" << tdc_params.pass_ratio
+           << "_v" << tdc_params.drift_stddev
+           << "_md" << tdc_params.max_drift
+           << "_seg" << decoder_params.num_segments
            << ".dat";
 
         return ss.str();
     }
 
-    bool read_cache(const size_t n, const size_t num_simulation, const channel::TD2CParams& params, const double alpha, std::vector<std::pair<size_t, double>>& capacities)
+    bool read_cache(const size_t n, const size_t num_simulation, const channel::TDCParams& tdc_params, const pcstdc::SCDecoderParams& decoder_params, std::vector<std::pair<size_t, double>>& capacities)
     {
-        const std::string filename = generate_filename(n, num_simulation, params, alpha);
+        const std::string filename = generate_filename(n, num_simulation, tdc_params, decoder_params);
         std::ifstream ifs(filename);
         if (!ifs.is_open()) {
             return false;
@@ -54,9 +56,9 @@ namespace
         return true;
     }
 
-    bool write_cache(const size_t n, const size_t num_simulation, const channel::TD2CParams& params, const double alpha, const std::vector<std::pair<size_t, double>>& capacities)
+    bool write_cache(const size_t n, const size_t num_simulation, const channel::TDCParams& tdc_params, const pcstdc::SCDecoderParams& decoder_params, const std::vector<std::pair<size_t, double>>& capacities)
     {
-        const std::string filename = generate_filename(n, num_simulation, params, alpha);
+        const std::string filename = generate_filename(n, num_simulation, tdc_params, decoder_params);
         std::ofstream ofs(filename, std::ios::out);
 
         if (!ofs.is_open()) {
@@ -209,9 +211,9 @@ namespace pcstdc
     {
         std::vector<std::pair<size_t, double>> capacities(code_length_);
 
-        if (!read_cache(code_length_, num_simulation_, channel_.params(), alpha_, capacities)) {
+        if (!read_cache(code_length_, num_simulation_, channel_.params(), decoder_params_, capacities)) {
             simulate(capacities);
-            write_cache(code_length_, num_simulation_, channel_.params(), alpha_, capacities);
+            write_cache(code_length_, num_simulation_, channel_.params(), decoder_params_, capacities);
         }
 
         std::fill(begin(frozen_bits_), end(frozen_bits_), true);
@@ -225,9 +227,9 @@ namespace pcstdc
     {
         std::vector<std::pair<size_t, double>> capacities(code_length_);
 
-        if (!read_cache(code_length_, num_simulation_, channel_.params(), alpha_, capacities)) {
+        if (!read_cache(code_length_, num_simulation_, channel_.params(), decoder_params_, capacities)) {
             parallel_simulate(capacities, num_threads);
-            write_cache(code_length_, num_simulation_, channel_.params(), alpha_, capacities);
+            write_cache(code_length_, num_simulation_, channel_.params(), decoder_params_, capacities);
         }
 
         std::fill(begin(frozen_bits_), end(frozen_bits_), true);
