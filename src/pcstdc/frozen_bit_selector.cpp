@@ -19,11 +19,10 @@ namespace
     std::string generate_filename(const size_t n, const size_t num_simulation, const channel::TDCParams& tdc_params, const pcstdc::SCDecoderParams& decoder_params)
     {
         std::stringstream ss;
-        ss << "td2c_capacities"
+        ss << "tdc_capacities"
            << "_n" << n
            << "_t" << num_simulation
            << std::defaultfloat
-           << "_" << tdc_params.drift_stddev
            << "_ps" << tdc_params.ps
            << "_r" << tdc_params.pass_ratio
            << "_v" << tdc_params.drift_stddev
@@ -216,7 +215,7 @@ namespace pcstdc
             write_cache(code_length_, num_simulation_, channel_.params(), decoder_params_, capacities);
         }
 
-        std::fill(begin(frozen_bits_), end(frozen_bits_), true);
+        std::fill(begin(frozen_bits_), end(frozen_bits_), 1);
         for (size_t i = 0; i < info_length_; ++i) {
             size_t j = capacities[i].first;
             frozen_bits_[j] = false;
@@ -232,7 +231,7 @@ namespace pcstdc
             write_cache(code_length_, num_simulation_, channel_.params(), decoder_params_, capacities);
         }
 
-        std::fill(begin(frozen_bits_), end(frozen_bits_), true);
+        std::fill(begin(frozen_bits_), end(frozen_bits_), 1);
         for (size_t i = 0; i < info_length_; ++i) {
             size_t j = capacities[i].first;
             frozen_bits_[j] = false;
