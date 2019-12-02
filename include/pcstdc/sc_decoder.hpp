@@ -38,7 +38,7 @@ namespace pcstdc
         SCDecoder(const SCDecoderParams& params, const channel::TDC& tdc, const std::vector<int>& frozen_bits);
         ~SCDecoder() = default;
 
-        // TODO: Implement
+        void init();
 
         Eigen::RowVectorXi decode(const Eigen::RowVectorXi& z);
         long double calc_likelihood(const int i, const int ui, InfoTable& u, const Eigen::RowVectorXi& z);

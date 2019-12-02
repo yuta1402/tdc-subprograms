@@ -27,10 +27,39 @@ namespace pcstdc
         drift_transition_prob_{ tdc.params().pass_ratio, tdc.params().drift_stddev, tdc.params().max_drift, params.num_segments },
         rec_calculations_{}
     {
+        const size_t n = calc_exponent_code_length(params.code_length);
+        const int max_segment = tdc_.params().max_drift * params_.num_segments;
+
+        rec_calculations_.resize(n+1);
+
+        for (size_t k = 0; k <= n; ++k) {
+            const size_t pownk = std::pow(2, n-k);
+            rec_calculations_[k].resize(pownk);
+
+            for (size_t m = 0; m < pownk; ++m) {
+                rec_calculations_[k][m].init(-max_segment, max_segment, estd::nivector<std::array<RecCalculationElement, 2>>(-max_segment, max_segment));
+            }
+        }
+    }
+
+    void SCDecoder::init()
+    {
+        const size_t n = calc_exponent_code_length(params_.code_length);
+        const int max_segment = tdc_.params().max_drift * params_.num_segments;
+
+        for (size_t k = 0; k <= n; ++k) {
+            const size_t pownk = std::pow(2, n-k);
+            for (size_t m = 0; m < pownk; ++m) {
+                rec_calculations_[k][m].init(-max_segment, max_segment, estd::nivector<std::array<RecCalculationElement, 2>>(-max_segment, max_segment));
+            }
+        }
     }
 
     Eigen::RowVectorXi SCDecoder::decode(const Eigen::RowVectorXi& z)
     {
+        // 再帰計算の初期化
+        init();
+
         const size_t code_length = params_.code_length;
         const size_t info_length = params_.info_length;
 
@@ -149,17 +178,19 @@ namespace pcstdc
         //     return 0.0;
         // }
 
+        const int m = a / (1 << k);
+
         // 過去に同じ引数で呼び出しがあった場合は保存した結果を返す
-        // const int m = a / (1 << k);
-        // const auto& dp = rec_calculations_[k][m][da][db][u[k][a+i]];
-        // if (dp.prev_index == i && dp.value != -1.0) {
-        //     return dp.value;
-        // }
+        const auto& dp = rec_calculations_[k][m][da][db][u[k][a+i]];
+        if (dp.prev_index == i && dp.value != -1.0) {
+            return dp.value;
+        }
 
         if (k == 1) {
             const long double r = calc_level1(i, a, b, da, db, u, z);
-            // rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
-            // rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
+
+            rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
+            rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
             return r;
         }
 
@@ -184,8 +215,8 @@ namespace pcstdc
             }
             // r *= 0.5;
 
-            // rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
-            // rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
+            rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
+            rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
             return r;
         }
 
@@ -203,8 +234,8 @@ namespace pcstdc
         }
         // r *= 0.5;
 
-        // rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
-        // rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
+        rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
+        rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
         return r;
     }
 }
