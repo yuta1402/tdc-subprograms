@@ -51,6 +51,9 @@ namespace pcstdc
         channel::TDC tdc_;
         std::vector<int> frozen_bits_;
 
+        size_t exponent_code_length_;
+        int max_segment_;
+
         DriftTransitionProb drift_transition_prob_;
         RecCalculations rec_calculations_;
     };

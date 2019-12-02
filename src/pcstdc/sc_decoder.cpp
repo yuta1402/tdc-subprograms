@@ -24,11 +24,12 @@ namespace pcstdc
         params_{ params },
         tdc_{ tdc },
         frozen_bits_{ frozen_bits },
+        exponent_code_length_{ calc_exponent_code_length(params.code_length) },
+        max_segment_{ tdc_.params().max_drift * params_.num_segments },
         drift_transition_prob_{ tdc.params().pass_ratio, tdc.params().drift_stddev, tdc.params().max_drift, params.num_segments },
         rec_calculations_{}
     {
-        const size_t n = calc_exponent_code_length(params.code_length);
-        const int max_segment = tdc_.params().max_drift * params_.num_segments;
+        const size_t n = exponent_code_length_;
 
         rec_calculations_.resize(n+1);
 
@@ -37,20 +38,19 @@ namespace pcstdc
             rec_calculations_[k].resize(pownk);
 
             for (size_t m = 0; m < pownk; ++m) {
-                rec_calculations_[k][m].init(-max_segment, max_segment, estd::nivector<std::array<RecCalculationElement, 2>>(-max_segment, max_segment));
+                rec_calculations_[k][m].init(-max_segment_, max_segment_, estd::nivector<std::array<RecCalculationElement, 2>>(-max_segment_, max_segment_));
             }
         }
     }
 
     void SCDecoder::init()
     {
-        const size_t n = calc_exponent_code_length(params_.code_length);
-        const int max_segment = tdc_.params().max_drift * params_.num_segments;
+        const size_t n = exponent_code_length_;
 
         for (size_t k = 0; k <= n; ++k) {
             const size_t pownk = std::pow(2, n-k);
             for (size_t m = 0; m < pownk; ++m) {
-                rec_calculations_[k][m].init(-max_segment, max_segment, estd::nivector<std::array<RecCalculationElement, 2>>(-max_segment, max_segment));
+                rec_calculations_[k][m].init(-max_segment_, max_segment_, estd::nivector<std::array<RecCalculationElement, 2>>(-max_segment_, max_segment_));
             }
         }
     }
@@ -97,11 +97,10 @@ namespace pcstdc
 
     long double SCDecoder::calc_likelihood(const int i, const int ui, InfoTable& u, const Eigen::RowVectorXi& z)
     {
-        const size_t n = calc_exponent_code_length(params_.code_length);
-        const int max_segment = tdc_.params().max_drift * params_.num_segments;
+        const size_t n = exponent_code_length_;
 
         long double ll = 0.0;
-        for (int dn = -max_segment; dn <= max_segment; ++dn) {
+        for (int dn = -max_segment_; dn <= max_segment_; ++dn) {
             u[n][i] = ui;
             ll += calc_likelihood_rec(i, n, 0, params_.code_length, 0, dn, u, z);
         }
@@ -196,14 +195,13 @@ namespace pcstdc
 
         const int j = i/2;
         const int g = (a+b)/2;
-        const int max_segment = tdc_.params().max_drift * params_.num_segments;
 
         if (i % 2 == 0) {
             long double r = 0;
 
             // dg0: d_{g-1}, dg1: d_{g}
-            for (int dg0 = -max_segment; dg0 <= max_segment; ++dg0) {
-                for (int dg1 = -max_segment; dg1 <= max_segment; ++dg1) {
+            for (int dg0 = -max_segment_; dg0 <= max_segment_; ++dg0) {
+                for (int dg1 = -max_segment_; dg1 <= max_segment_; ++dg1) {
                     for (int next_u = 0; next_u <= 1; ++next_u) {
                         u[k-1][a+j] = (u[k][a+2*j] + next_u) % 2;
                         const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
@@ -223,8 +221,8 @@ namespace pcstdc
         long double r = 0;
 
         // dg0: d_{g-1}, dg1: d_{g}
-        for (int dg0 = -max_segment; dg0 <= max_segment; ++dg0) {
-            for (int dg1 = -max_segment; dg1 <= max_segment; ++dg1) {
+        for (int dg0 = -max_segment_; dg0 <= max_segment_; ++dg0) {
+            for (int dg1 = -max_segment_; dg1 <= max_segment_; ++dg1) {
                 u[k-1][a+j] = (u[k][a+2*j] + u[k][a+2*j+1]) % 2;
                 const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
                 u[k-1][g+j] = u[k][a+2*j+1];
