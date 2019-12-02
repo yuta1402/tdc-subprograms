@@ -209,13 +209,17 @@ namespace pcstdc
             // dg0: d_{g-1}, dg1: d_{g}
             for (int dg0 = -max_segment_; dg0 <= max_segment_; ++dg0) {
                 for (int dg1 = -max_segment_; dg1 <= max_segment_; ++dg1) {
-                    for (int next_u = 0; next_u <= 1; ++next_u) {
-                        u[k-1][a+j] = (u[k][a+2*j] + next_u) % 2;
-                        const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
-                        u[k-1][g+j] = next_u;
-                        const long double wg = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, z);
-                        r += wb * wg * drift_transition_prob_(dg1, dg0);
-                    }
+                    u[k-1][a+j] = (u[k][a+2*j] + 0) % 2;
+                    const long double wb0 = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
+                    u[k-1][g+j] = 0;
+                    const long double wg0 = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, z);
+
+                    u[k-1][a+j] = (u[k][a+2*j] + 1) % 2;
+                    const long double wb1 = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
+                    u[k-1][g+j] = 1;
+                    const long double wg1 = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, z);
+
+                    r += (wb0 * wg0 + wb1 * wg1) * drift_transition_prob_(dg1, dg0);
                 }
             }
             // r *= 0.5;
