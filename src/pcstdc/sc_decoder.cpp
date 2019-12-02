@@ -137,20 +137,25 @@ namespace pcstdc
 
     long double SCDecoder::calc_level1(const int i, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z)
     {
-        const int j = i / 2;
-        const int g = (a + b) / 2;
-        const int k = 1;
+        // g = (a + b) / 2
+        const int g = ((a + b) >> 1);
 
         if (i % 2 == 0) {
             long double r = 0;
 
-            for (int next_u = 0; next_u <= 1; ++next_u) {
-                u[k-1][a+j] = (u[k][a+2*j] + next_u) % 2;
-                const long double wb = calc_level0(a, da, u[k-1][a+j], z);
-                u[k-1][g+j] = next_u;
-                const long double wg = calc_level0(g, db, u[k-1][g+j], z);
-                r += wb * wg * drift_transition_prob_(db, da);
-            }
+            // u[1][a+1] = 0
+            u[0][a] = (u[1][a] + 0) % 2;
+            const long double wb0 = calc_level0(a, da, u[0][a], z);
+            u[0][g] = 0;
+            const long double wg0 = calc_level0(g, db, u[0][g], z);
+
+            // u[1][a+1] = 1
+            u[0][a] = (u[1][a] + 1) % 2;
+            const long double wb1 = calc_level0(a, da, u[0][a], z);
+            u[0][g] = 1;
+            const long double wg1 = calc_level0(g, db, u[0][g], z);
+
+            r = (wb0 * wg0 + wb1 * wg1) * drift_transition_prob_(db, da);
             // r *= 0.5;
 
             return r;
@@ -158,10 +163,10 @@ namespace pcstdc
 
         long double r = 0;
 
-        u[k-1][a+j] = (u[k][a+2*j] + u[k][a+2*j+1]) % 2;
-        const long double wb = calc_level0(a, da, u[k-1][a+j], z);
-        u[k-1][g+j] = u[k][a+2*j+1];
-        const long double wg = calc_level0(g, db, u[k-1][g+j], z);
+        u[0][a] = (u[1][a] + u[1][a+1]) % 2;
+        const long double wb = calc_level0(a, da, u[0][a], z);
+        u[0][g] = u[1][a+1];
+        const long double wg = calc_level0(g, db, u[0][g], z);
         r += wb * wg * drift_transition_prob_(db, da);
         // r *= 0.5;
 
@@ -170,14 +175,13 @@ namespace pcstdc
 
     long double SCDecoder::calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z)
     {
-        // TODO: Implement
-
         // daとdbの差による刈り込み
         // if (abs(db-da) > (1 << k)) {
         //     return 0.0;
         // }
 
-        const int m = a / (1 << k);
+        // m = a / 2^k
+        const int m = (a >> k);
 
         // 過去に同じ引数で呼び出しがあった場合は保存した結果を返す
         const auto& dp = rec_calculations_[k][m][da][db][u[k][a+i]];
@@ -193,8 +197,11 @@ namespace pcstdc
             return r;
         }
 
-        const int j = i/2;
-        const int g = (a+b)/2;
+        // j = i / 2
+        const int j = (i >> 1);
+
+        // g = (a + b) / 2
+        const int g = ((a + b) >> 1);
 
         if (i % 2 == 0) {
             long double r = 0;
