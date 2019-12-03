@@ -7,3 +7,4 @@
 - [ ] tdc-raw-ber-simulatorの実装
 - [ ] level0の計算結果を保存して再利用
 - [ ] daとdbの差を利用した枝狩り
+- [ ] channel::TDCの最大ドリフト値を削除
