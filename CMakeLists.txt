@@ -28,5 +28,7 @@ target_link_libraries(${target}
     ${CMAKE_THREAD_LIBS_INIT}
 )
 
+add_subdirectory("./cmd")
+
 enable_testing()
 add_subdirectory("./test")
