@@ -80,6 +80,22 @@ int main(int argc, char* argv[])
               << "    num simulations (frozen bit): " << num_frozen_bit_simulations << '\n'
               << std::endl;
 
+    channel::TDCParams tdc_params;
+    tdc_params.ps = ps;
+    tdc_params.pass_ratio = pass_ratio;
+    tdc_params.drift_stddev = drift_stddev;
+    tdc_params.max_drift = max_drift;
+
+    channel::TDC tdc(tdc_params);
+
+    pcstdc::SCDecoderParams decoder_params;
+    decoder_params.code_length = code_length;
+    decoder_params.info_length = info_length;
+    decoder_params.num_segments = num_segments;
+
+    FrozeBitAnalyzer analyzer(code_length, info_length, tdc, decoder_params, num_frozen_bit_simulations, num_epochs);
+    analyzer.parallel_analyze(num_threads);
+
     // channel::TD2CParams params;
     // params.pi = pi;
     // params.pd = pd;

@@ -159,13 +159,13 @@ void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
             z[j] = estd::Random(0, 1);
         }
 
-        pcs::PolarCodeEncoder encoder(code_length_, code_length_, tmp);
-        pctd2cs::SCDecoder decoder(code_length_, code_length_, tmp, channel_, alpha_);
+        pcstdc::PolarEncoder encoder(code_length_, code_length_, tmp);
+        pcstdc::SCDecoder decoder(decoder_params_, channel_, tmp);
 
         const auto& x = encoder.encode(z);
         const auto& y = channel_.send(x);
 
-        pcs::InfoTableHandler u(code_length_);
+        pcstdc::InfoTableHandler u(code_length_);
 
         for (size_t i = 0; i < code_length_; ++i) {
             auto zz = z;
@@ -216,7 +216,7 @@ void FrozeBitAnalyzer::analyze()
 
         std::swap(prev_frozen_bits, current_frozen_bits);
 
-        save_capacity(code_length_, simulation_count_, channel_.params(), alpha_, capacities);
+        save_capacity(code_length_, simulation_count_, channel_.params(), decoder_params_, capacities);
     }
 }
 
@@ -240,6 +240,6 @@ void FrozeBitAnalyzer::parallel_analyze(const size_t num_threads)
 
         std::swap(prev_frozen_bits, current_frozen_bits);
 
-        save_capacity(code_length_, simulation_count_, channel_.params(), alpha_, capacities);
+        save_capacity(code_length_, simulation_count_, channel_.params(), decoder_params_, capacities);
     }
 }
