@@ -12,7 +12,7 @@ public:
     static constexpr size_t kInitialNumEpoch = 1e+2;
 
 public:
-    FrozeBitAnalyzer(const size_t code_length, const size_t info_length, const channel::TDC& channel, const size_t num_simulation = kInitialNumSimulation, const size_t num_epoch = kInitialNumEpoch);
+    FrozeBitAnalyzer(const size_t code_length, const size_t info_length, const channel::TDC& channel, const pcstdc::SCDecoderParams& decoder_params, const size_t num_simulation = kInitialNumSimulation, const size_t num_epoch = kInitialNumEpoch);
     ~FrozeBitAnalyzer() = default;
 
     void step();
@@ -28,7 +28,7 @@ private:
     const size_t num_epoch_;
 
     const channel::TDC& channel_;
-    const double alpha_;
+    const pcstdc::SCDecoderParams& decoder_params_;
 
     size_t simulation_count_;
     std::vector<std::pair<size_t, long double>> sum_capacities_;

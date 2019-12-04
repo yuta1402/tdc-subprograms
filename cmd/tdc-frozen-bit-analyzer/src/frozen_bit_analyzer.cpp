@@ -3,32 +3,32 @@
 #include "estd/random.hpp"
 #include "estd/parallel.hpp"
 #include "frozen_bit_analyzer.hpp"
-#include "pcs/polar_code_encoder.hpp"
-#include "pctd2cs/sc_decoder.hpp"
+#include "pcstdc/polar_encoder.hpp"
+#include "pcstdc/sc_decoder.hpp"
 #include "utl/utility.hpp"
 
 namespace
 {
-    std::string generate_filename(const size_t n, const size_t num_simulation, const channel::TD2CParams& params, const double alpha)
+    std::string generate_filename(const size_t n, const size_t num_simulation, const channel::TDCParams& tdc_params, const pcstdc::SCDecoderParams& decoder_params)
     {
         std::stringstream ss;
-        ss << "td2c_capacities"
+        ss << "tdc_capacities"
            << "_n" << n
            << "_t" << num_simulation
            << std::defaultfloat
-           << "_pi" << params.pi
-           << "_pd" << params.pd
-           << "_ps" << params.ps
-           << "_md" << params.max_drift
-           << "_a" << alpha
+           << "_ps" << tdc_params.ps
+           << "_r" << tdc_params.pass_ratio
+           << "_v" << tdc_params.drift_stddev
+           << "_md" << tdc_params.max_drift
+           << "_seg" << decoder_params.num_segments
            << ".dat";
 
         return ss.str();
     }
 
-    bool save_capacity(const size_t n, const size_t num_simulation, const channel::TD2CParams& params, const double alpha, const std::vector<std::pair<size_t, long double>>& capacities)
+    bool save_capacity(const size_t n, const size_t num_simulation, const channel::TDCParams& tdc_params, const pcstdc::SCDecoderParams& decoder_params, const std::vector<std::pair<size_t, long double>>& capacities)
     {
-        const std::string filename = generate_filename(n, num_simulation, params, alpha);
+        const std::string filename = generate_filename(n, num_simulation, tdc_params, decoder_params);
         std::ofstream ofs(filename, std::ios::out);
 
         if (!ofs.is_open()) {
@@ -85,13 +85,13 @@ namespace
     }
 }
 
-FrozeBitAnalyzer::FrozeBitAnalyzer(const size_t code_length, const size_t info_length, const channel::TD2C& channel, const double alpha, const size_t num_simulation, const size_t num_epoch) :
+FrozeBitAnalyzer::FrozeBitAnalyzer(const size_t code_length, const size_t info_length, const channel::TDC& channel, const pcstdc::SCDecoderParams& decoder_params, const size_t num_simulation, const size_t num_epoch) :
     code_length_{ code_length },
     info_length_{ info_length },
     num_simulation_{ num_simulation },
     num_epoch_{ num_epoch },
     channel_{ channel },
-    alpha_{ alpha },
+    decoder_params_{ decoder_params },
     simulation_count_{ 0 },
     sum_capacities_( code_length )
 {
@@ -103,7 +103,7 @@ FrozeBitAnalyzer::FrozeBitAnalyzer(const size_t code_length, const size_t info_l
 
 void FrozeBitAnalyzer::step()
 {
-    const std::vector<bool> tmp(code_length_, false);
+    const std::vector<int> tmp(code_length_, 0);
     const size_t epoch_simulations = std::min(num_epoch_, num_simulation_ - simulation_count_);
 
     for (size_t e = 0; e < epoch_simulations; ++e) {
@@ -112,13 +112,13 @@ void FrozeBitAnalyzer::step()
             z[j] = estd::Random(0, 1);
         }
 
-        pcs::PolarCodeEncoder encoder(code_length_, code_length_, tmp);
-        pctd2cs::SCDecoder decoder(code_length_, code_length_, tmp, channel_, alpha_);
+        pcstdc::PolarEncoder encoder(code_length_, code_length_, tmp);
+        pcstdc::SCDecoder decoder(decoder_params_, channel_, tmp);
 
         const auto& x = encoder.encode(z);
         const auto& y = channel_.send(x);
 
-        pcs::InfoTableHandler u(code_length_);
+        pcstdc::InfoTableHandler u(code_length_);
 
         for (size_t i = 0; i < code_length_; ++i) {
             auto zz = z;
@@ -148,7 +148,7 @@ void FrozeBitAnalyzer::step()
 
 void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
 {
-    const std::vector<bool> tmp(code_length_, false);
+    const std::vector<int> tmp(code_length_, false);
     const size_t epoch_simulations = std::min(num_epoch_, num_simulation_ - simulation_count_);
 
     std::mutex mtx;

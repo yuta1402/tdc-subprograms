@@ -13,7 +13,7 @@ include_directories("./include")
 
 add_executable(${target}
     ${source_dir}/main.cpp
-    # ${source_dir}/frozen_bit_analyzer.cpp
+    ${source_dir}/frozen_bit_analyzer.cpp
 )
 
 target_link_libraries(${target}
