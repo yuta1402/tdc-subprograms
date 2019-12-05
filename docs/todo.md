@@ -1,5 +1,5 @@
 # TODO
-- [ ] tdc-frozen-bit-analyzerの実装
+- [x] tdc-frozen-bit-analyzerの実装
 - [ ] tdc-sc-ber-simulatorの実装
 - [ ] tdc-scl-ber-simulatorの実装
 - [ ] tdc-scl-crc-ber-simulatorの実装
