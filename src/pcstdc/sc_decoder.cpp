@@ -209,6 +209,10 @@ namespace pcstdc
             // dg0: d_{g-1}, dg1: d_{g}
             for (int dg0 = -max_segment_; dg0 <= max_segment_; ++dg0) {
                 for (int dg1 = -max_segment_; dg1 <= max_segment_; ++dg1) {
+                    if (drift_transition_prob_(dg1, dg0) == 0.0) {
+                        continue;
+                    }
+
                     u[k-1][a+j] = (u[k][a+2*j] + 0) % 2;
                     const long double wb0 = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
                     u[k-1][g+j] = 0;
@@ -234,6 +238,10 @@ namespace pcstdc
         // dg0: d_{g-1}, dg1: d_{g}
         for (int dg0 = -max_segment_; dg0 <= max_segment_; ++dg0) {
             for (int dg1 = -max_segment_; dg1 <= max_segment_; ++dg1) {
+                if (drift_transition_prob_(dg1, dg0) == 0.0) {
+                    continue;
+                }
+
                 u[k-1][a+j] = (u[k][a+2*j] + u[k][a+2*j+1]) % 2;
                 const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
                 u[k-1][g+j] = u[k][a+2*j+1];
