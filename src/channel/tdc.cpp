@@ -33,9 +33,8 @@ namespace channel
             nd = di + r;
 
             const bool can_pass = abs(r) < 1.0 - params_.pass_ratio;
-            const bool in_bounds = abs(nd) <= params_.max_drift;
 
-            if (can_pass && in_bounds) {
+            if (can_pass) {
                 break;
             }
         }
