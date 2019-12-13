@@ -21,6 +21,8 @@ namespace channel
 
         // TODO: 最大ドリフト値は復号時にのみ用いるべき
         int max_drift;
+
+        double offset_ratio{ 0.0 };
     };
 
     /*!
