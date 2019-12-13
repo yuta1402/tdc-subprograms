@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
     // decoder params
     p.add("max-drift"   , '3', "the maximum of drift value", true);
     p.add("segments"    , '4', "the number of segments", true);
+    p.add("offset-rate" , '5', "offset rate", true);
 
     if(!p.parse()) {
         std::cout << p.usage() << std::endl;
@@ -56,6 +57,7 @@ int main(int argc, char* argv[])
     // decoder params
     const int max_drift    = p.get<int>("max-drift", 2);
     const int num_segments = p.get<int>("segments" , 2);
+    const double offset_rate = p.get<double>("offset-rate", 0.0);
 
     estd::Reseed(seed);
 
@@ -85,6 +87,7 @@ int main(int argc, char* argv[])
     tdc_params.pass_ratio = pass_ratio;
     tdc_params.drift_stddev = drift_stddev;
     tdc_params.max_drift = max_drift;
+    tdc_params.offset_rate = offset_rate;
 
     channel::TDC tdc(tdc_params);
 
@@ -92,6 +95,7 @@ int main(int argc, char* argv[])
     decoder_params.code_length = code_length;
     decoder_params.info_length = info_length;
     decoder_params.num_segments = num_segments;
+    decoder_params.offset_rate = offset_rate;
 
     FrozeBitAnalyzer analyzer(code_length, info_length, tdc, decoder_params, num_frozen_bit_simulations, num_epochs);
     analyzer.parallel_analyze(num_threads);
