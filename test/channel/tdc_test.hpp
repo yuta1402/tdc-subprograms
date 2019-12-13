@@ -8,6 +8,7 @@ void tdc_generate_next_drift_value_test()
 
     params.drift_stddev = 5.0;
     params.max_drift = 4;
+    params.num_segments = 4;
 
     {
         params.pass_ratio = 0.0;
@@ -100,6 +101,7 @@ void tdc_generate_drift_sequence_test()
 
     params.drift_stddev = 5.0;
     params.max_drift = 4;
+    params.num_segments = 4;
 
     {
         params.pass_ratio = 1.0;
@@ -130,6 +132,7 @@ void tdc_generate_signal_sequence_test()
         params.pass_ratio = 0.8;
         params.drift_stddev = 5.0;
         params.max_drift = 4;
+        params.num_segments = 4;
 
         channel::TDC tdc(params);
 
@@ -160,6 +163,7 @@ void tdc_generate_signal_sequence_test()
         params.pass_ratio = 0.8;
         params.drift_stddev = 5.0;
         params.max_drift = 4;
+        params.num_segments = 4;
 
         channel::TDC tdc(params);
 
@@ -223,9 +227,10 @@ void tdc_send_test()
     channel::TDCParams params;
 
     params.drift_stddev = 5.0;
-    params.max_drift = 4;
     params.pass_ratio = 0.8;
     params.ps = 0.1;
+    params.max_drift = 4;
+    params.num_segments = 4;
 
     channel::TDC tdc(params);
 

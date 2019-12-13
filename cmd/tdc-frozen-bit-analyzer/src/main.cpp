@@ -85,6 +85,7 @@ int main(int argc, char* argv[])
     tdc_params.pass_ratio = pass_ratio;
     tdc_params.drift_stddev = drift_stddev;
     tdc_params.max_drift = max_drift;
+    tdc_params.num_segments = num_segments;
 
     channel::TDC tdc(tdc_params);
 

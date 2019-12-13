@@ -30,6 +30,12 @@ namespace channel
         double nd = 0.0;
         while (true) {
             r = ndist(estd::GetDefaultRandomEngine());
+
+            // 1/\nuで離散化
+            r *= params_.num_segments;
+            r = std::round(r);
+            r /= params_.num_segments;
+
             nd = di + r;
 
             const bool can_pass = abs(r) < 1.0 - params_.pass_ratio;
