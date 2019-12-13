@@ -14,7 +14,6 @@ void ber_simulator_test()
     options.num_threads = 1;
     options.num_epochs = 100;
     options.min_num_error_words = 100;
-    options.min_num_simulations = 100;
     options.max_num_simulations = 100;
 
     channel::BSC bsc(0.0);
