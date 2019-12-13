@@ -28,6 +28,7 @@ namespace
            << "_v" << tdc_params.drift_stddev
            << "_md" << tdc_params.max_drift
            << "_seg" << decoder_params.num_segments
+           << "_or" << decoder_params.offset_rate
            << ".dat";
 
         return ss.str();
