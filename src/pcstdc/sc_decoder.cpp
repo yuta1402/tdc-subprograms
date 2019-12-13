@@ -111,8 +111,8 @@ namespace pcstdc
     long double SCDecoder::calc_level0(const int a, const int da, const int xa, const Eigen::RowVectorXi& z)
     {
         const double real_da = static_cast<double>(da) / params_.num_segments;
-        const int rounded_da = std::floor(real_da + 0.5);
-        const double rest_da = real_da - rounded_da;
+        const int rounded_da = std::floor(real_da + a * params_.offset_rate + 0.5);
+        const double rest_da = real_da + a * params_.offset_rate - rounded_da;
 
         const int j = a + rounded_da;
 

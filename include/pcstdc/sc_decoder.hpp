@@ -22,6 +22,8 @@ namespace pcstdc
         size_t info_length;
 
         int num_segments;
+
+        double offset_rate{ 0.0 };
     };
 
     /*!
