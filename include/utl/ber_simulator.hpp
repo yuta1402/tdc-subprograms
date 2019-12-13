@@ -21,7 +21,6 @@ namespace utl
         size_t num_threads{ 8 };
         size_t num_epochs{ 1000 };
         size_t min_num_error_words{ 100 };
-        size_t min_num_simulations{ 1000 };
         size_t max_num_simulations{ 100000 };
     };
 
