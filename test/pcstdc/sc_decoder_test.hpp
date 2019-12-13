@@ -27,7 +27,7 @@ void sc_decoder_calc_level0_test()
 
     {
         double p;
-        p = decoder.calc_level0(0, -2, 0, z); eassert(p == 0.5, "p == %lf", p);
+        p = decoder.calc_level0(0, -2, 0, z); eassert(p == 1.0, "p == %lf", p);
         p = decoder.calc_level0(0, -1, 0, z); eassert(p == 0.5, "p == %lf", p);
         p = decoder.calc_level0(0,  0, 0, z); eassert(p == 1.0-ps, "p == %lf, ps == %lf", p, ps);
         p = decoder.calc_level0(0,  1, 0, z); eassert(p == 0.5, "p == %lf", p);
@@ -36,7 +36,7 @@ void sc_decoder_calc_level0_test()
 
     {
         double p;
-        p = decoder.calc_level0(0, -2, 1, z); eassert(p == 0.5, "p == %lf", p);
+        p = decoder.calc_level0(0, -2, 1, z); eassert(p == 1.0, "p == %lf", p);
         p = decoder.calc_level0(0, -1, 1, z); eassert(p == 0.5, "p == %lf", p);
         p = decoder.calc_level0(0,  0, 1, z); eassert(p == ps, "p == %lf, ps == %lf", p, ps);
         p = decoder.calc_level0(0,  1, 1, z); eassert(p == 0.5, "p == %lf", p);

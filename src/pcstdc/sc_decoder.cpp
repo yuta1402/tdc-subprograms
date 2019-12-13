@@ -117,7 +117,7 @@ namespace pcstdc
         const int j = a + rounded_da;
 
         if (j < 0 || static_cast<int>(params_.code_length) <= j) {
-            return 0.5;
+            return 1.0;
         }
 
         const double pass_ratio_bound = tdc_.params().pass_ratio * 0.5;

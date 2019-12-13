@@ -8,3 +8,4 @@
 - [ ] tdc-scl-crc-ber-simulatorの実装
 - [ ] tdc-raw-ber-simulatorの実装
 - [ ] channel::TDCの最大ドリフト値を削除
+- [ ] ldpc+markerの実装
