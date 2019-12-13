@@ -32,7 +32,7 @@ namespace channel
             r = ndist(estd::GetDefaultRandomEngine());
             nd = di + r;
 
-            const bool can_pass = abs(r + params_.offset_ratio) < 1.0 - params_.pass_ratio;
+            const bool can_pass = abs(r + params_.offset_rate) < 1.0 - params_.pass_ratio;
             const bool in_bounds = abs(nd) <= params_.max_drift;
 
             if (can_pass && in_bounds) {
@@ -66,7 +66,7 @@ namespace channel
             const double left_bound  = j - 0.5*params_.pass_ratio;
             const double right_bound = j + 0.5*params_.pass_ratio;
 
-            const bool can_pass = (left_bound < i+d[i]+i*params_.offset_ratio) && (i+d[i]+i*params_.offset_ratio < right_bound);
+            const bool can_pass = (left_bound < i+d[i]+i*params_.offset_rate) && (i+d[i]+i*params_.offset_rate < right_bound);
             const bool in_bounds = (0 <= j) && (j < static_cast<int>(code_length));
 
             if (can_pass && in_bounds) {
