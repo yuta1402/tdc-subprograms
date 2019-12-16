@@ -26,7 +26,7 @@ namespace pcstdc
         frozen_bits_{ frozen_bits },
         exponent_code_length_{ calc_exponent_code_length(params.code_length) },
         max_segment_{ tdc_.params().max_drift * params_.num_segments },
-        drift_transition_prob_{ tdc.params().pass_ratio, tdc.params().drift_stddev, tdc.params().max_drift, params.num_segments },
+        drift_transition_prob_{ tdc.params().pass_ratio, tdc.params().drift_stddev, tdc.params().max_drift, params.num_segments, params.offset_rate },
         rec_calculations_{}
     {
         const size_t n = exponent_code_length_;

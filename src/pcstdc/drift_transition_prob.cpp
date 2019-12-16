@@ -6,13 +6,14 @@
 
 namespace
 {
-    std::string generate_prob_table_filename(const double pass_ratio, const double drift_stddev, const int max_drift, const int num_segments)
+    std::string generate_prob_table_filename(const double pass_ratio, const double drift_stddev, const int max_drift, const int num_segments, const double offset_rate)
     {
         std::stringstream ss;
 
         ss << "prob_table"
            << "_r" << std::scientific << std::setprecision(4) << pass_ratio
            << "_v" << std::scientific << std::setprecision(4) << drift_stddev
+           << "_o" << std::scientific << std::setprecision(4) << offset_rate
            << "_d" << max_drift
            << "_s" << num_segments
            << ".dat";
@@ -23,12 +24,12 @@ namespace
 
 namespace pcstdc
 {
-    DriftTransitionProb::DriftTransitionProb(const double pass_ratio, const double drift_stddev, const int max_drift, const int num_segments, const std::string& prob_table_dir) :
+    DriftTransitionProb::DriftTransitionProb(const double pass_ratio, const double drift_stddev, const int max_drift, const int num_segments, const double offset_rate, const std::string& prob_table_dir) :
         max_segment_{ max_drift * num_segments },
         prob_table_dir_{ prob_table_dir },
         probs_()
     {
-        const auto& filename = generate_prob_table_filename(pass_ratio, drift_stddev, max_drift, num_segments);
+        const auto& filename = generate_prob_table_filename(pass_ratio, drift_stddev, max_drift, num_segments, offset_rate);
         const auto& filepath = prob_table_dir_ + filename;
 
         probs_.init(-max_segment_, max_segment_, estd::nivector<double>(-max_segment_, max_segment_, 0.0));
