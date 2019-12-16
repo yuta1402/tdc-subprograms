@@ -1,7 +1,10 @@
+import os
 import argparse
 import numpy as np
 from scipy import integrate
 from scipy.stats import norm
+
+OUTPUT_DIR = 'prob_table/'
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -15,7 +18,7 @@ def parse_args():
     parser.add_argument('max_drift', help='max drift', type=int)
     parser.add_argument('segments', help='num of segments', type=int)
 
-    parser.add_argument('-o', '--output', help='output filepath', type=argparse.FileType('w'))
+    # parser.add_argument('-o', '--output', help='output filepath', type=argparse.FileType('w'))
 
     args = parser.parse_args()
     return args
@@ -30,6 +33,7 @@ def drift_pdf(x, pass_ratio, drift_stddev, c=1.0):
 
 def main():
     args = parse_args()
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     # calculate normalizing constant c
     pdf = lambda x: drift_pdf(x, args.pass_ratio, args.drift_stddev)
@@ -58,7 +62,8 @@ def main():
         prob_table[i] /= prob_table[i].sum()
 
     filename = 'prob_table_r{:.4e}_v{:.4e}_d{}_s{}.dat'.format(args.pass_ratio, args.drift_stddev, args.max_drift, args.segments)
-    np.savetxt(filename, prob_table, fmt='%.10e', delimiter=' ')
+    filepath = os.path.join(OUTPUT_DIR, filename)
+    np.savetxt(filepath, prob_table, fmt='%.10e', delimiter=' ')
 
 if __name__ == '__main__':
     main()
