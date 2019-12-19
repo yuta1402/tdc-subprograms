@@ -1,6 +1,7 @@
 #ifndef TDC_CAPCITY_CALCULATOR_HPP
 #define TDC_CAPCITY_CALCULATOR_HPP
 
+#include <thread>
 #include "channel/tdc.hpp"
 #include "pcstdc/drift_transition_prob.hpp"
 
@@ -18,7 +19,7 @@ public:
     TDCCapacityCalculator(const Params& params, const channel::TDC& tdc);
     ~TDCCapacityCalculator() = default;
 
-    double calculate();
+    double parallel_calculate(const size_t num_threads = std::thread::hardware_concurrency());
 
 private:
     Params params_;

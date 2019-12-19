@@ -126,7 +126,7 @@ TDCCapacityCalculator::TDCCapacityCalculator(const Params& params, const channel
 {
 }
 
-double TDCCapacityCalculator::calculate()
+double TDCCapacityCalculator::parallel_calculate(const size_t num_threads)
 {
     std::vector<double> capacities(params_.num_simulations);
 
@@ -155,7 +155,7 @@ double TDCCapacityCalculator::calculate()
         if (c < 0.0) {
             c = 0.0;
         }
-    });
+    }, num_threads);
 
     double sum = 0.0;
     for (const auto& c : capacities) {

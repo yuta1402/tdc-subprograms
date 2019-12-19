@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
     calculator_params.num_segments = num_segments;
 
     TDCCapacityCalculator calculator(calculator_params, tdc);
-    const double c = calculator.calculate();
+    const double c = calculator.parallel_calculate(num_threads);
     std::cout << c << std::endl;
 
     return 0;
