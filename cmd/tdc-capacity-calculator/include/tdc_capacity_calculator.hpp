@@ -10,6 +10,7 @@ public:
     struct Params
     {
         size_t code_length;
+        size_t num_simulations;
         int num_segments;
     };
 

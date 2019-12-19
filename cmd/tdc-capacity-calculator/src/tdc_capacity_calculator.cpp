@@ -1,5 +1,6 @@
 #include <vector>
 #include "estd/random.hpp"
+#include "estd/parallel.hpp"
 #include "estd/negative_index_vector.hpp"
 #include "tdc_capacity_calculator.hpp"
 #include "pcstdc/drift_transition_prob.hpp"
@@ -127,30 +128,40 @@ TDCCapacityCalculator::TDCCapacityCalculator(const Params& params, const channel
 
 double TDCCapacityCalculator::calculate()
 {
-    Eigen::RowVectorXi x(params_.code_length);
-    for (int i = 0; i < x.size(); ++i) {
-        x[i] = estd::Random(0, 1);
-    }
-    const auto& z = tdc_.send(x);
+    std::vector<double> capacities(params_.num_simulations);
 
-    double logpz;
-    {
+    estd::parallel_for_each_with_reseed(capacities, [this](auto&& c){
+        Eigen::RowVectorXi x(params_.code_length);
+        for (int i = 0; i < x.size(); ++i) {
+        x[i] = estd::Random(0, 1);
+        }
+        const auto& z = tdc_.send(x);
+
+        double logpz;
+        {
         const auto& upwards = calc_z_upwards(max_segment_, params_, tdc_, z);
         const auto& lambda = calc_lambda(params_.code_length, max_segment_, dtp_, upwards);
         logpz = calc_logp(lambda);
-    }
+        }
 
-    double logpxz;
-    {
+        double logpxz;
+        {
         const auto& upwards = calc_xz_upwards(max_segment_, params_, tdc_, x, z);
         const auto& lambda = calc_lambda(params_.code_length, max_segment_, dtp_, upwards);
         logpxz = calc_logp(lambda);
+        }
+
+        c = 1.0 - logpz/params_.code_length + logpxz/params_.code_length;
+        if (c < 0.0) {
+            c = 0.0;
+        }
+    });
+
+    double sum = 0.0;
+    for (const auto& c : capacities) {
+        sum += c;
     }
 
-    double c = 1.0 - logpz/params_.code_length + logpxz/params_.code_length;
-    if (c < 0.0) {
-        return 0.0;
-    }
-
+    const double c = sum / capacities.size();
     return c;
 }
