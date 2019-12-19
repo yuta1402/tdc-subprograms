@@ -35,7 +35,8 @@ namespace
 
     std::vector<double> calc_lambda(const size_t code_length, const int max_segment, const pcstdc::DriftTransitionProb& dtp, const std::vector<estd::nivector<double>>& upwards)
     {
-        std::vector<double> lambda(code_length, 0.0);
+        // sumが0の場合はlambdaがinfなので、予めinfで初期化しておく
+        std::vector<double> lambda(code_length, std::numeric_limits<double>::infinity());
 
         std::vector<estd::nivector<double>> mu(
             code_length, estd::nivector<double>(-max_segment, max_segment)
@@ -62,9 +63,11 @@ namespace
             }
 
             // normalization
-            lambda[k] = 1.0 / sum;
-            for (int dk = -max_segment; dk <= max_segment; ++dk) {
-                mu[k][dk] *= lambda[k];
+            if (sum != 0.0) {
+                lambda[k] = 1.0 / sum;
+                for (int dk = -max_segment; dk <= max_segment; ++dk) {
+                    mu[k][dk] *= lambda[k];
+                }
             }
         }
 
@@ -145,5 +148,9 @@ double TDCCapacityCalculator::calculate()
     }
 
     double c = 1.0 - logpz/params_.code_length + logpxz/params_.code_length;
+    if (c < 0.0) {
+        return 0.0;
+    }
+
     return c;
 }
