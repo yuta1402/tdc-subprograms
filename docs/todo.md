@@ -9,4 +9,4 @@
 - [x] tdc-raw-ber-simulatorの実装
 - [ ] channel::TDCの最大ドリフト値を削除
 - [ ] ldpc+markerの実装
-- [ ] SIR計算の実装
+- [x] SIR計算の実装
