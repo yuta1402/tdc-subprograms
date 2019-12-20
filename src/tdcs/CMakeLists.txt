@@ -7,6 +7,6 @@ set(sources
     ./likelihood_calculator.cpp
 )
 
-add_custom_target(prob_table ALL COMMAND "cp" "-r" "${PROJECT_SOURCE_DIR}/data/prob_table" "${PROJECT_BINARY_DIR}")
+add_custom_target(tdcs_prob_table ALL COMMAND "cp" "-r" "${PROJECT_SOURCE_DIR}/data/prob_table" "${PROJECT_BINARY_DIR}")
 
 add_library(${target} ${sources})
