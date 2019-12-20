@@ -3,7 +3,7 @@
 
 #include <thread>
 #include "channel/tdc.hpp"
-#include "pcstdc/drift_transition_prob.hpp"
+#include "tdcs/drift_transition_prob.hpp"
 
 class TDCCapacityCalculator
 {
@@ -26,7 +26,7 @@ private:
     channel::TDC tdc_;
 
     const int max_segment_;
-    pcstdc::DriftTransitionProb dtp_;
+    tdcs::DriftTransitionProb dtp_;
 };
 
 #endif

@@ -21,6 +21,7 @@ include_directories("./include")
 
 add_subdirectory(${source_dir}/channel)
 add_subdirectory(${source_dir}/pcstdc)
+add_subdirectory(${source_dir}/tdcs)
 
 add_executable(${target} ${source_dir}/main.cpp)
 

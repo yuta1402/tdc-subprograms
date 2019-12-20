@@ -6,7 +6,7 @@
 #include <Eigen/Core>
 #include "estd/negative_index_vector.hpp"
 #include "channel/tdc.hpp"
-#include "pcstdc/drift_transition_prob.hpp"
+#include "tdcs/drift_transition_prob.hpp"
 #include "pcstdc/info_table_handler.hpp"
 #include "pcstdc/rec_calculation_element.hpp"
 
@@ -54,7 +54,7 @@ namespace pcstdc
         size_t exponent_code_length_;
         int max_segment_;
 
-        DriftTransitionProb drift_transition_prob_;
+        tdcs::DriftTransitionProb drift_transition_prob_;
         RecCalculations rec_calculations_;
     };
 }

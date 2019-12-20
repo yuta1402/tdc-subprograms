@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
-#include "pcstdc/drift_transition_prob.hpp"
+#include "tdcs/drift_transition_prob.hpp"
 
 namespace
 {
@@ -21,7 +21,7 @@ namespace
     }
 }
 
-namespace pcstdc
+namespace tdcs
 {
     DriftTransitionProb::DriftTransitionProb(const double pass_ratio, const double drift_stddev, const int max_drift, const int num_segments, const std::string& prob_table_dir) :
         max_segment_{ max_drift * num_segments },

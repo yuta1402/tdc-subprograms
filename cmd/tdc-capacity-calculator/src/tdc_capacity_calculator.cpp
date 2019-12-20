@@ -3,7 +3,7 @@
 #include "estd/parallel.hpp"
 #include "estd/negative_index_vector.hpp"
 #include "tdc_capacity_calculator.hpp"
-#include "pcstdc/drift_transition_prob.hpp"
+#include "tdcs/drift_transition_prob.hpp"
 
 namespace
 {
@@ -34,7 +34,7 @@ namespace
         return p;
     }
 
-    std::vector<double> calc_lambda(const size_t code_length, const int max_segment, const pcstdc::DriftTransitionProb& dtp, const std::vector<estd::nivector<double>>& upwards)
+    std::vector<double> calc_lambda(const size_t code_length, const int max_segment, const tdcs::DriftTransitionProb& dtp, const std::vector<estd::nivector<double>>& upwards)
     {
         // sumが0の場合はlambdaがinfなので、予めinfで初期化しておく
         std::vector<double> lambda(code_length, std::numeric_limits<double>::infinity());

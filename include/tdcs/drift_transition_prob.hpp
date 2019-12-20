@@ -1,14 +1,14 @@
-#ifndef PCSTDC_DRIFT_TRANSITION_PROB_HPP
-#define PCSTDC_DRIFT_TRANSITION_PROB_HPP
+#ifndef TDCS_DRIFT_TRANSITION_PROB_HPP
+#define TDCS_DRIFT_TRANSITION_PROB_HPP
 
 #include <string>
 #include "estd/negative_index_vector.hpp"
 
 /*!
-@namespace pcstdc
-@brief Polar Code Subprograms for Timing Drift Channel
+@namespace tdcs
+@brief Timing Drift Channel Subprograms
 */
-namespace pcstdc
+namespace tdcs
 {
     /*!
     @class DriftTransitionProb

@@ -1,9 +1,9 @@
 #include "test.hpp"
-#include "pcstdc/drift_transition_prob.hpp"
+#include "tdcs/drift_transition_prob.hpp"
 
 void drift_transition_prob_test()
 {
-    pcstdc::DriftTransitionProb dtp(0.0, 1.0, 2, 2);
+    tdcs::DriftTransitionProb dtp(0.0, 1.0, 2, 2);
 
     eassert(dtp(-4, -1) == 0.0000000000e+00, "dtp(-4, -1) == %lf", dtp(-4, -1));
     eassert(dtp(-3, -1) == 9.9565174546e-02, "dtp(-3, -1) == %lf", dtp(-3, -1));

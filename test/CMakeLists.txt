@@ -6,4 +6,5 @@ include_directories(
 
 add_subdirectory("./channel")
 add_subdirectory("./pcstdc")
+add_subdirectory("./tdcs")
 add_subdirectory("./utl")
