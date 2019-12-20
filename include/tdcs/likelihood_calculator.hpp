@@ -1,11 +1,11 @@
-#ifndef LCSTDC_LIKELIHOOD_CALCULATOR_HPP
-#define LCSTDC_LIKELIHOOD_CALCULATOR_HPP
+#ifndef TDCS_LIKELIHOOD_CALCULATOR_HPP
+#define TDCS_LIKELIHOOD_CALCULATOR_HPP
 
 /*!
-@namespace lcstdc
-@brief LDPC Code Subprograms for Timing Drift Channel
+@namespace tdcs
+@brief Timing Drift Channel Subprograms
 */
-namespace lcstdc
+namespace tdcs
 {
     /*!
     @class LikelihoodCalculator

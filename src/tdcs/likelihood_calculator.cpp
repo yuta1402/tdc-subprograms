@@ -1,6 +1,6 @@
-#include "lcstdc/likelihood_calculator.hpp"
+#include "tdcs/likelihood_calculator.hpp"
 
-namespace lcstdc
+namespace tdcs
 {
     LikelihoodCalculator::LikelihoodCalculator()
     {
