@@ -10,3 +10,19 @@
 - [ ] channel::TDCの最大ドリフト値を削除
 - [ ] ldpc+markerの実装
 - [x] SIR計算の実装
+- [ ] DriftTransitionProbをpcstdcからtdcsに移動
+- [ ] BPDecoderの移植
+- [ ] CyclicPriorProbの移植
+- [ ] LikelihoodCalculatorの実装
+
+## LDPC+Markerの構成
+- lcstdc
+    - BPDecoder
+    - LikelihoodCalculator
+    - DriftTransitionProb
+    - CyclicPriorProb
+
+### 問題点
+- utl::BERSimulatorはEncoderが必要なので生成行列が必要になる
+    - 長い符号長の検査行列から生成行列を生成するのは時間がかかる
+    - ランダムな情報語を用いるBERSimulatorではなく、ランダムな符号語を用いるBERSimulatorを作れば良さそう
