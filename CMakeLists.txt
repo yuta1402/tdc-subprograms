@@ -20,6 +20,7 @@ set(source_dir ./src)
 include_directories("./include")
 
 add_subdirectory(${source_dir}/channel)
+add_subdirectory(${source_dir}/lcstdc)
 add_subdirectory(${source_dir}/pcstdc)
 add_subdirectory(${source_dir}/tdcs)
 
