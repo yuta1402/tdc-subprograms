@@ -40,26 +40,19 @@ namespace
         std::vector<double> lambda(code_length, std::numeric_limits<double>::infinity());
 
         std::vector<estd::nivector<double>> mu(
-            code_length, estd::nivector<double>(-max_segment, max_segment)
+            code_length, estd::nivector<double>(-max_segment, max_segment, 0.0)
         );
 
-        mu[0][0] = 0.5 * upwards[0][0];
-
-        // normalization
-        lambda[0] = 1.0 / mu[0][0];
         mu[0][0] = 1.0;
+        lambda[0] = 1.0;
 
         for (size_t k = 1; k < code_length; ++k) {
             double sum = 0.0;
 
             for (int dk = -max_segment; dk <= max_segment; ++dk) {
-                double prev_sum = 0.0;
-                // dj represents d_{k-1}
                 for (int dj = -max_segment; dj <= max_segment; ++dj) {
-                    prev_sum += mu[k-1][dj] * dtp(dk, dj);
+                    mu[k][dk] += mu[k-1][dj] * dtp(dk, dj) * upwards[k-1][dj];
                 }
-
-                mu[k][dk] = 0.5 * prev_sum * upwards[k][dk];
                 sum += mu[k][dk];
             }
 
@@ -95,7 +88,7 @@ namespace
             for (int dk = -max_segment; dk <= max_segment ; ++dk) {
                 const double gk0 = calc_gk(k, dk, 0, z, tdc, params);
                 const double gk1 = calc_gk(k, dk, 1, z, tdc, params);
-                upwards[k][dk] = gk0 + gk1;
+                upwards[k][dk] = 0.5 * (gk0 + gk1);
             }
         }
 
@@ -110,7 +103,7 @@ namespace
 
         for (size_t k = 0; k < params.code_length; ++k) {
             for (int dk = -max_segment; dk <= max_segment ; ++dk) {
-                upwards[k][dk] = calc_gk(k, dk, x[k], z, tdc, params);
+                upwards[k][dk] = 0.5 * calc_gk(k, dk, x[k], z, tdc, params);
             }
         }
 
