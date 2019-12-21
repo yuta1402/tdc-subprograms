@@ -10,10 +10,10 @@
 - [ ] channel::TDCの最大ドリフト値を削除
 - [ ] ldpc+markerの実装
 - [x] SIR計算の実装
-- [ ] DriftTransitionProbをpcstdcからtdcsに移動
+- [x] DriftTransitionProbをpcstdcからtdcsに移動
 - [ ] BPDecoderの移植
-- [ ] CyclicPriorProbの移植
-- [ ] LikelihoodCalculatorの実装
+- [x] CyclicPriorProbの移植
+- [x] LikelihoodCalculatorの実装
 
 ## LDPC+Markerの構成
 - lcstdc
