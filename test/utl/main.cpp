@@ -5,6 +5,7 @@
 #include "cyclic_prior_prob_test.hpp"
 #include "raw_encoder_test.hpp"
 #include "raw_decoder_test.hpp"
+#include "marker_handler_test.hpp"
 #include "marker_prior_prob_test.hpp"
 
 int main()
@@ -15,6 +16,7 @@ int main()
     cyclic_prior_prob_test();
     raw_encoder_test();
     raw_decoder_test();
+    marker_handler_test();
     marker_prior_prob_test();
 
     return test::exit();
