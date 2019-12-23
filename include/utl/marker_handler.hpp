@@ -73,6 +73,13 @@ namespace utl
             return x;
         }
 
+        static MarkerHandler Marker01(const size_t interval)
+        {
+            Eigen::RowVectorXi marker(2);
+            marker << 0, 1;
+            return MarkerHandler(marker, interval);
+        }
+
     private:
         Eigen::RowVectorXi marker_;
         size_t interval_;
