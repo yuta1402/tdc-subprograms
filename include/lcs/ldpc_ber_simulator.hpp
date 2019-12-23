@@ -40,7 +40,6 @@ namespace lcs
 
     struct LDPCBERSimulatorOptions
     {
-        Eigen::SparseMatrix<int> parity_check_matrix;
         Eigen::MatrixXi encoder_matrix;
 
         size_t num_threads{ 8 };
@@ -64,7 +63,7 @@ namespace lcs
     public:
         LDPCBERSimulator(const LDPCBERSimulatorOptions& options, const Channel& channel, const Encoder& encoder, const Decoder& decoder) :
             options_{ options },
-            code_length_{ static_cast<size_t>(options.parity_check_matrix.cols()) },
+            code_length_{ static_cast<size_t>(options.encoder_matrix.cols()) },
             channel_{ channel },
             encoder_{ encoder },
             decoder_{ decoder },
@@ -79,7 +78,7 @@ namespace lcs
             std::vector<size_t> distances(options_.num_epochs);
 
             estd::parallel_for_with_reseed(options_.num_epochs, [this, &distances](const auto& t){
-                auto c = make_random_codeword(options_.encoder_matrix);
+                auto c = detail::make_random_codeword(options_.encoder_matrix);
                 auto x = encoder_.encode(c);
                 auto y = channel_.send(x);
 

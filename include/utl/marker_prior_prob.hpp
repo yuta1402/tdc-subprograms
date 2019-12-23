@@ -13,6 +13,8 @@ namespace utl
     class MarkerPriorProb : public CyclicPriorProb
     {
     public:
+        MarkerPriorProb() = default;
+
         MarkerPriorProb(const Eigen::RowVectorXi& marker, const size_t interval) :
             CyclicPriorProb{ 2 * (marker.size() + interval), 0.5 }
         {

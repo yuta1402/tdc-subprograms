@@ -30,6 +30,7 @@ namespace channel
     class TDC
     {
     public:
+        TDC() = default;
         TDC(const TDCParams& params);
         ~TDC() = default;
 

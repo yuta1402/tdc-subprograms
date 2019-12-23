@@ -14,6 +14,8 @@ namespace utl
     class MarkerHandler
     {
     public:
+        MarkerHandler() = default;
+
         MarkerHandler(const Eigen::RowVectorXi& marker, const size_t interval) :
             marker_{ marker },
             interval_{ interval },
