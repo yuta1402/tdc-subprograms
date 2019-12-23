@@ -73,6 +73,10 @@ namespace utl
             return x;
         }
 
+        const Eigen::RowVectorXi& marker() const { return marker_; }
+        size_t interval() const { return interval_; }
+        const MarkerPriorProb& prior_prob() const { return prior_prob_; }
+
         static MarkerHandler Marker01(const size_t interval)
         {
             Eigen::RowVectorXi marker(2);
