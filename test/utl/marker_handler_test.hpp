@@ -91,7 +91,78 @@ void marker_handler_insert_marker_test()
     }
 }
 
+void marker_handler_remove_marker_test()
+{
+    Eigen::RowVectorXi marker(2);
+    marker << 0, 1;
+
+    utl::MarkerHandler marker_handler(marker, 2);
+
+    {
+        Eigen::RowVectorXi x_marker(5);
+        x_marker << 0, 0, 0, 1, 0;
+
+        auto x = marker_handler.remove_marker(x_marker);
+
+        eassert(x.size() == 3, "x.size() == %ld", x.size());
+        eassert(x[0] == 0, "x[0] == %d", x[0]);
+        eassert(x[1] == 0, "x[1] == %d", x[1]);
+        eassert(x[2] == 0, "x[2] == %d", x[2]);
+    }
+
+    {
+        Eigen::RowVectorXi x_marker(5);
+        x_marker << 0, 1, 0, 1, 0;
+
+        auto x = marker_handler.remove_marker(x_marker);
+
+        eassert(x.size() == 3, "x.size() == %ld", x.size());
+        eassert(x[0] == 0, "x[0] == %d", x[0]);
+        eassert(x[1] == 1, "x[1] == %d", x[1]);
+        eassert(x[2] == 0, "x[2] == %d", x[2]);
+    }
+
+    {
+        Eigen::RowVectorXi x_marker(5);
+        x_marker << 1, 1, 0, 1, 1;
+
+        auto x = marker_handler.remove_marker(x_marker);
+
+        eassert(x.size() == 3, "x.size() == %ld", x.size());
+        eassert(x[0] == 1, "x[0] == %d", x[0]);
+        eassert(x[1] == 1, "x[1] == %d", x[1]);
+        eassert(x[2] == 1, "x[2] == %d", x[2]);
+    }
+
+    {
+        Eigen::RowVectorXi x_marker(8);
+        x_marker << 0, 0, 0, 1, 0, 0, 1, 0;
+
+        auto x = marker_handler.remove_marker(x_marker);
+
+        eassert(x.size() == 4, "x.size() == %ld", x.size());
+        eassert(x[0] == 0, "x[0] == %d", x[0]);
+        eassert(x[1] == 0, "x[1] == %d", x[1]);
+        eassert(x[2] == 0, "x[2] == %d", x[2]);
+        eassert(x[3] == 0, "x[3] == %d", x[3]);
+    }
+
+    {
+        Eigen::RowVectorXi x_marker(8);
+        x_marker << 1, 1, 0, 1, 1, 1, 1, 0;
+
+        auto x = marker_handler.remove_marker(x_marker);
+
+        eassert(x.size() == 4, "x.size() == %ld", x.size());
+        eassert(x[0] == 1, "x[0] == %d", x[0]);
+        eassert(x[1] == 1, "x[1] == %d", x[1]);
+        eassert(x[2] == 1, "x[2] == %d", x[2]);
+        eassert(x[3] == 1, "x[3] == %d", x[3]);
+    }
+}
+
 void marker_handler_test()
 {
     marker_handler_insert_marker_test();
+    marker_handler_remove_marker_test();
 }
