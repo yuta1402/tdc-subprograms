@@ -24,7 +24,7 @@ namespace utl
         ~MarkerHandler() = default;
 
         template<class Type>
-        Type insert_marker(const Type& x)
+        Type insert_marker(const Type& x) const
         {
             const size_t num_markers = x.size() / interval_;
             const size_t length = x.size() + num_markers * marker_.size();
@@ -50,7 +50,7 @@ namespace utl
         }
 
         template<class Type> 
-        Type remove_marker(const Type& x_marker)
+        Type remove_marker(const Type& x_marker) const
         {
             const size_t num_markers = x_marker.size() / (interval_ + marker_.size());
             const size_t length = x_marker.size() - num_markers * marker_.size();
