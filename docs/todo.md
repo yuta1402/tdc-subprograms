@@ -13,7 +13,7 @@
 - [x] DriftTransitionProbをpcstdcからtdcsに移動
 - [x] CyclicPriorProbの移植
 - [x] LikelihoodCalculatorの実装
-- [ ] utl::MarkerHandlerの実装
+- [x] utl::MarkerHandlerの実装
 - [ ] utl::CodewordBERSimulatorの実装
 - [ ] lcs::LDPCRandomEncoderの実装
 - [ ] lcs::BPDecoderの移植
