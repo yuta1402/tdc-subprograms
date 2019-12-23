@@ -11,9 +11,14 @@
 - [ ] ldpc+markerの実装
 - [x] SIR計算の実装
 - [x] DriftTransitionProbをpcstdcからtdcsに移動
-- [ ] BPDecoderの移植
 - [x] CyclicPriorProbの移植
 - [x] LikelihoodCalculatorの実装
+- [ ] utl::MarkerHandlerの実装
+- [ ] utl::CodewordBERSimulatorの実装
+- [ ] lcs::LDPCRandomEncoderの実装
+- [ ] lcs::BPDecoderの移植
+- [ ] lcstdc::BPMarkerDecoderの実装
+- [ ] lcstdc::BPMarkerEncoderの実装
 
 ## LDPC+Markerの構成
 - lcstdc
