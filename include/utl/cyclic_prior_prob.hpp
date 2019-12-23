@@ -69,7 +69,7 @@ namespace utl
             return prob;
         }
 
-    private:
+    protected:
         size_t cycle_;
         std::vector<value_type> probs_;
     };
