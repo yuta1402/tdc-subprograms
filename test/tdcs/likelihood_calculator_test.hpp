@@ -41,4 +41,16 @@ void likelihood_calculator_test()
     eassert(ll[5][1] == 0.0, "ll[5][1] == %lf", ll[5][1]);
     eassert(ll[6][1] == 1.0, "ll[6][1] == %lf", ll[6][1]);
     eassert(ll[7][1] == 0.0, "ll[7][1] == %lf", ll[7][1]);
+
+    auto llr = llc.calc_llr(z);
+    double inf = std::numeric_limits<double>::infinity();
+
+    eassert(llr[0] ==  inf, "llr[0] == %lf", llr[0]);
+    eassert(llr[1] ==  inf, "llr[1] == %lf", llr[1]);
+    eassert(llr[2] ==  inf, "llr[2] == %lf", llr[2]);
+    eassert(llr[3] == -inf, "llr[3] == %lf", llr[3]);
+    eassert(llr[4] ==  inf, "llr[4] == %lf", llr[4]);
+    eassert(llr[5] ==  inf, "llr[5] == %lf", llr[5]);
+    eassert(llr[6] == -inf, "llr[6] == %lf", llr[6]);
+    eassert(llr[7] ==  inf, "llr[7] == %lf", llr[7]);
 }

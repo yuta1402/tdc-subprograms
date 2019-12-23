@@ -142,4 +142,21 @@ namespace tdcs
 
         return ll;
     }
+
+    Eigen::RowVectorXd LikelihoodCalculator::calc_llr(const Eigen::RowVectorXi& z)
+    {
+        Eigen::RowVectorXd llr(z.size());
+
+        auto ll = calc(z);
+        for (int k = 0; k < llr.size(); ++k) {
+            if (ll[k][0] == 0.0 && ll[k][1] == 0.0) {
+                llr[k] = 0.0;
+                continue;
+            }
+
+            llr[k] = std::log(ll[k][0]) - std::log(ll[k][1]);
+        }
+
+        return llr;
+    }
 }

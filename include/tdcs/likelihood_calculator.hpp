@@ -32,6 +32,7 @@ namespace tdcs
         ~LikelihoodCalculator() = default;
 
         std::vector<std::array<double, 2>> calc(const Eigen::RowVectorXi& z);
+        Eigen::RowVectorXd calc_llr(const Eigen::RowVectorXi& z);
 
     private:
         channel::TDC tdc_;
