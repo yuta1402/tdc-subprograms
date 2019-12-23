@@ -10,6 +10,31 @@ void marker_handler_insert_marker_test()
     utl::MarkerHandler marker_handler(marker, 2);
 
     {
+        Eigen::RowVectorXi x(1);
+        x << 0;
+
+        auto x_marker = marker_handler.insert_marker(x);
+
+        eassert(x_marker.size() == 1, "x_marker.size() == %ld", x_marker.size());
+
+        eassert(x_marker[0] == 0, "x_marker[0] == %d", x_marker[0]);
+    }
+
+    {
+        Eigen::RowVectorXi x(2);
+        x << 0, 0;
+
+        auto x_marker = marker_handler.insert_marker(x);
+
+        eassert(x_marker.size() == 4, "x_marker.size() == %ld", x_marker.size());
+
+        eassert(x_marker[0] == 0, "x_marker[0] == %d", x_marker[0]);
+        eassert(x_marker[1] == 0, "x_marker[1] == %d", x_marker[1]);
+        eassert(x_marker[2] == 0, "x_marker[2] == %d", x_marker[2]);
+        eassert(x_marker[3] == 1, "x_marker[3] == %d", x_marker[3]);
+    }
+
+    {
         Eigen::RowVectorXi x(3);
         x << 0, 0, 0;
 
@@ -97,6 +122,17 @@ void marker_handler_remove_marker_test()
     marker << 0, 1;
 
     utl::MarkerHandler marker_handler(marker, 2);
+
+    {
+        Eigen::RowVectorXi x_marker(4);
+        x_marker << 0, 0, 1, 0;
+
+        auto x = marker_handler.remove_marker(x_marker);
+
+        eassert(x.size() == 2, "x.size() == %ld", x.size());
+        eassert(x[0] == 0, "x[0] == %d", x[0]);
+        eassert(x[1] == 0, "x[1] == %d", x[1]);
+    }
 
     {
         Eigen::RowVectorXi x_marker(5);
