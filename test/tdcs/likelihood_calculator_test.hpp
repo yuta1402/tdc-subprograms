@@ -1,6 +1,7 @@
 #include "test.hpp"
 #include "tdcs/likelihood_calculator.hpp"
 #include "channel/tdc.hpp"
+#include "utl/marker_handler.hpp"
 
 void likelihood_calculator_test()
 {
@@ -14,7 +15,7 @@ void likelihood_calculator_test()
 
     tdcs::LikelihoodCalculator::Params params;
     params.num_segments = 2;
-    params.prior_prob = utl::CyclicPriorProb::Marker01(2);
+    params.prior_prob = utl::MarkerPriorProb::Marker01(2);
 
     tdcs::LikelihoodCalculator llc(tdc, params);
 

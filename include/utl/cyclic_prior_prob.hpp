@@ -53,22 +53,6 @@ namespace utl
 
         size_t cycle() const { return cycle_; }
 
-        static CyclicPriorProb Marker01(const size_t interval)
-        {
-            CyclicPriorProb prob(interval*2 + 4, 0.5);
-            prob[interval][0] = 1.0;
-            prob[interval + 1][0] = 0.0;
-            prob[interval*2 + 2][0] = 0.0;
-            prob[interval*2 + 3][0] = 1.0;
-
-            prob[interval][1] = 0.0;
-            prob[interval + 1][1] = 1.0;
-            prob[interval*2 + 2][1] = 1.0;
-            prob[interval*2 + 3][1] = 0.0;
-
-            return prob;
-        }
-
     protected:
         size_t cycle_;
         std::vector<value_type> probs_;

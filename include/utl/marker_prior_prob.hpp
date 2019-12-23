@@ -38,6 +38,13 @@ namespace utl
         }
 
         ~MarkerPriorProb() = default;
+
+        static MarkerPriorProb Marker01(const size_t interval)
+        {
+            Eigen::RowVectorXi marker(2);
+            marker << 0, 1;
+            return MarkerPriorProb(marker, interval);
+        }
     };
 }
 
