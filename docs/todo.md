@@ -10,3 +10,11 @@
 - [ ] channel::TDCの最大ドリフト値を削除
 - [ ] ldpc+markerの実装
 - [x] SIR計算の実装
+
+# Experiments
+- Channel Polarization
+    - [ ] v=1e-0でn=11..15
+    - [ ] v=1e-1でn=11..15
+- BER
+    - [ ] raw, ldpc+marker, scl (n=12?)
+    - [ ] L=1,2,4,8でscl (n=12?)
