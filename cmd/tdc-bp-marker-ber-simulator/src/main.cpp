@@ -72,6 +72,12 @@ int main(int argc, char* argv[])
     auto enc_matrix = enc_spmat.toMatrix();
     auto dec_matrix = dec_spmat.toSparseMatrix();
 
+    const size_t code_length = dec_matrix.cols();
+    const size_t info_length = dec_matrix.rows();
+    const double ldpc_code_rate = 1.0 - static_cast<double>(info_length)/code_length;
+    const double marker_code_rate = static_cast<double>(marker_interval) / (marker_interval + 2);
+    const double overall_code_rate = ldpc_code_rate * marker_code_rate;
+
     estd::Reseed(seed);
 
     // メルセンヌ・ツイスタの生成する値のうち、最初の100万個を捨てる (分布が良くないらしい)
@@ -80,9 +86,12 @@ int main(int argc, char* argv[])
     }
 
     std::cout << "code parameters:\n"
-              // << "    code length: " << code_length << '\n'
-              // << "    info length: " << info_length << '\n'
+              << "    code length: " << code_length << '\n'
+              << "    info length: " << info_length << '\n'
               << "    marker interval: " << marker_interval << '\n'
+              << "    code rate (ldpc): " << ldpc_code_rate << '\n'
+              << "    code rate (marker): " << marker_code_rate << '\n'
+              << "    code rate (overall): " << overall_code_rate << '\n'
               << "channel parameters:\n"
               << "    ps: " << ps << '\n'
               << "    pass ratio: " << pass_ratio << '\n'
