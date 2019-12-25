@@ -50,7 +50,7 @@ namespace pcstdc
         for (size_t k = 0; k <= n; ++k) {
             const size_t pownk = std::pow(2, n-k);
             for (size_t m = 0; m < pownk; ++m) {
-                rec_calculations_[k][m].assign(-max_segment_, max_segment_, estd::nivector<std::array<RecCalculationElement, 2>>(-max_segment_, max_segment_));
+                rec_calculations_[k][m].fill(estd::nivector<std::array<RecCalculationElement, 2>>(-max_segment_, max_segment_));
             }
         }
     }

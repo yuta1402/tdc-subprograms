@@ -9,6 +9,7 @@
 #include <vector>
 #include <cassert>
 #include <iostream>
+#include <algorithm>
 
 /*!
 @namespace estd
@@ -71,6 +72,11 @@ namespace estd
             max_ = max;
 
             data_ = container_type(max - min + 1, value);
+        }
+
+        void fill(const value_type& value)
+        {
+            std::fill(std::begin(data_), std::end(data_), value);
         }
 
         negative_index_vector& operator=(const negative_index_vector& rhs) = default;
