@@ -176,9 +176,10 @@ namespace pcstdc
     long double SCDecoder::calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z)
     {
         // daとdbの差による刈り込み
-        // if (abs(db-da) > (1 << k)) {
-        //     return 0.0;
-        // }
+        const int max_num_transitions = drift_transition_prob_.max_num_transitions();
+        if (abs(db-da) > max_num_transitions * (1 << k)) {
+            return 0.0;
+        }
 
         // m = a / 2^k
         const int m = (a >> k);

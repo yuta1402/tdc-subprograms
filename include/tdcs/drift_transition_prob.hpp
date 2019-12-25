@@ -31,9 +31,11 @@ namespace tdcs
 
         // 確率が0でないときの(curr_seg, next_seg, prob)の一覧
         range_container_type not_zero_range() const { return not_zero_range_data_; }
+        int max_num_transitions() const { return max_num_transitions_; }
 
     private:
         int max_segment_;
+        int max_num_transitions_;
 
         std::string prob_table_dir_;
 

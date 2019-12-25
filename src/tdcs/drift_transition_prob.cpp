@@ -25,6 +25,7 @@ namespace tdcs
 {
     DriftTransitionProb::DriftTransitionProb(const double pass_ratio, const double drift_stddev, const int max_drift, const int num_segments, const std::string& prob_table_dir) :
         max_segment_{ max_drift * num_segments },
+        max_num_transitions_{ 0 },
         prob_table_dir_{ prob_table_dir },
         probs_(),
         not_zero_range_data_()
@@ -49,6 +50,7 @@ namespace tdcs
 
                     if (p != 0) {
                         not_zero_range_data_.emplace_back(i, j, p);
+                        max_num_transitions_ = std::max(max_num_transitions_, abs(j-i));
                     }
                 }
             }
