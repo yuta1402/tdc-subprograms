@@ -1,8 +1,6 @@
 # TODO
 - [x] tdc-frozen-bit-analyzerの実装
 - [x] tdc-sc-benchmarkの実装
-- [ ] level0の計算結果を保存して再利用
-- [ ] daとdbの差を利用した枝狩り
 - [x] tdc-sc-ber-simulatorの実装
 - [ ] tdc-scl-ber-simulatorの実装
 - [ ] tdc-scl-crc-ber-simulatorの実装
@@ -17,6 +15,12 @@
 - [x] lcs::BPDecoderの移植
 - [x] lcstdc::BPMarkerDecoderの実装
 - [x] lcstdc::BPMarkerEncoderの実装
+
+## SC Decoderの最適化
+- [ ] level0の計算結果を保存して再利用
+- [x] daとdbの差を利用した枝狩り
+- [x] DriftTransitionProbで確率が0の場合を除外したリストを作成
+- [ ] 再帰計算をやめる
 
 # Experiments
 - Channel Polarization
