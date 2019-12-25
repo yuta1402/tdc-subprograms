@@ -18,11 +18,12 @@ int main(int argc, char* argv[])
 
     p.add("dec-file"               , 'd', "the parity check matrix", true);
     p.add("enc-file"               , 'c', "the encoder matrix", true);
+    p.add("marker-interval"        , 'm', "the marker interval", true);
     p.add("threads"                , 't', "the number of threads", true);
     p.add("epochs"                 , 'e', "the number of trials once", true);
     p.add("error-words"            , 'w', "the minimum of count of error words", true);
     p.add("seed"                   , 'r', "the seed of random device", true);
-    p.add("max-simulations"        , 'm', "the maximum of simulation", true);
+    p.add("max-simulations"        , 's', "the maximum of simulation", true);
     p.add("frozen-bit-simulations" , 'f', "the number of simulations to determinate of frozen bits", true);
 
     // channel params
@@ -47,6 +48,7 @@ int main(int argc, char* argv[])
 
     const std::string dec_filename          = p.get<std::string>("dec-file"         , "./data/252.252.3.252.spmat.dec");
     const std::string enc_filename          = p.get<std::string>("enc-file"         , "./data/252.252.3.252.spmat.enc");
+    const size_t marker_interval            = p.get<size_t>("marker-interval"       , 2);
     const size_t num_threads                = p.get<size_t>("threads"               , 12);
     const size_t num_epochs                 = p.get<size_t>("epochs"                , 100);
     const size_t min_num_error_words        = p.get<size_t>("error-words"           , 100);
@@ -80,6 +82,7 @@ int main(int argc, char* argv[])
     std::cout << "code parameters:\n"
               // << "    code length: " << code_length << '\n'
               // << "    info length: " << info_length << '\n'
+              << "    marker interval: " << marker_interval << '\n'
               << "channel parameters:\n"
               << "    ps: " << ps << '\n'
               << "    pass ratio: " << pass_ratio << '\n'
@@ -105,7 +108,7 @@ int main(int argc, char* argv[])
 
     channel::TDC tdc(tdc_params);
 
-    auto marker_handler = utl::MarkerHandler::Marker01(2);
+    auto marker_handler = utl::MarkerHandler::Marker01(marker_interval);
 
     utl::MarkerEncoder encoder(marker_handler);
 
