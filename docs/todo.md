@@ -8,26 +8,20 @@
 - [ ] tdc-scl-crc-ber-simulatorの実装
 - [x] tdc-raw-ber-simulatorの実装
 - [ ] channel::TDCの最大ドリフト値を削除
-- [ ] ldpc+markerの実装
+- [x] ldpc+markerの実装
 - [x] SIR計算の実装
 - [x] DriftTransitionProbをpcstdcからtdcsに移動
 - [x] CyclicPriorProbの移植
 - [x] LikelihoodCalculatorの実装
 - [x] utl::MarkerHandlerの実装
-- [ ] utl::CodewordBERSimulatorの実装
-- [ ] lcs::LDPCRandomEncoderの実装
-- [ ] lcs::BPDecoderの移植
-- [ ] lcstdc::BPMarkerDecoderの実装
-- [ ] lcstdc::BPMarkerEncoderの実装
+- [x] lcs::BPDecoderの移植
+- [x] lcstdc::BPMarkerDecoderの実装
+- [x] lcstdc::BPMarkerEncoderの実装
 
-## LDPC+Markerの構成
-- lcstdc
-    - BPDecoder
-    - LikelihoodCalculator
-    - DriftTransitionProb
-    - CyclicPriorProb
-
-### 問題点
-- utl::BERSimulatorはEncoderが必要なので生成行列が必要になる
-    - 長い符号長の検査行列から生成行列を生成するのは時間がかかる
-    - ランダムな情報語を用いるBERSimulatorではなく、ランダムな符号語を用いるBERSimulatorを作れば良さそう
+# Experiments
+- Channel Polarization
+    - [ ] v=1e-0でn=11..15
+    - [ ] v=1e-1でn=11..15
+- BER
+    - [ ] raw, ldpc+marker, scl (n=12?)
+    - [ ] L=1,2,4,8でscl (n=12?)
