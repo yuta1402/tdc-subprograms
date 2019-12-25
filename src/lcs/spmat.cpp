@@ -1,3 +1,4 @@
+#include <iostream>
 #include <fstream>
 #include "lcs/spmat.hpp"
 
@@ -6,6 +7,10 @@ namespace lcs
     Spmat::Spmat(const std::string& filename)
     {
         std::ifstream spmat_file(filename, std::ios::in);
+        if (!spmat_file.is_open()) {
+            std::cerr << "read spmat file error: " << filename << std::endl;
+            exit(1);
+        }
 
         spmat_file >> cols >> rows;
         spmat_file >> max_num_one_row >> max_num_one_col;
