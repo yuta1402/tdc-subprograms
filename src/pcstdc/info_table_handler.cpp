@@ -24,7 +24,7 @@ namespace
         const int g = (a+b)/2;
 
         for (int j = 0; a+j < g; ++j) {
-            u[k-1][a+j] = (u[k][a+2*j] + u[k][a+2*j+1]) % 2;
+            u[k-1][a+j] = (u[k][a+2*j] ^ u[k][a+2*j+1]);
             u[k-1][g+j] = u[k][a+2*j+1];
         }
 
@@ -41,7 +41,7 @@ namespace
         const int j = i/2;
         const int g = (a+b)/2;
 
-        u[k-1][a+j] = (u[k][a+2*j] + u[k][a+2*j+1]) % 2;
+        u[k-1][a+j] = (u[k][a+2*j] ^ u[k][a+2*j+1]);
         u[k-1][g+j] = u[k][a+2*j+1];
 
         update_u_rec(j, k-1, a, g, u);
