@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
     cmdl::Parser p(argc, argv);
     p.add("help", 'h', "display help", false);
 
-    p.add("dec-file"               , 'h', "the parity check matrix", true);
+    p.add("dec-file"               , 'd', "the parity check matrix", true);
     p.add("enc-file"               , 'c', "the encoder matrix", true);
     p.add("threads"                , 't', "the number of threads", true);
     p.add("epochs"                 , 'e', "the number of trials once", true);
