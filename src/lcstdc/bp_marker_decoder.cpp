@@ -21,8 +21,8 @@ namespace lcstdc
 
         auto llr_marker = likelihood_calculator.calc_llr(z);
         auto llr = options_.marker_handler.remove_marker(llr_marker);
-        auto x_hat = bp_decoder.decode(llr);
+        auto c_hat = bp_decoder.decode(llr);
 
-        return x_hat;
+        return c_hat;
     }
 }

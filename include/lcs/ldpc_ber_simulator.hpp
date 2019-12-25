@@ -84,9 +84,9 @@ namespace lcs
 
                 // 別スレッド間でメンバ変数を共有してしまう可能性があるためコピーを作成
                 Decoder decoder(decoder_);
-                auto x_hat = decoder.decode(y);
+                auto c_hat = decoder.decode(y);
 
-                Eigen::RowVectorXi e = x + x_hat;
+                Eigen::RowVectorXi e = c + c_hat;
                 for (size_t i = 0; i < e.size(); ++i) {
                     e[i] = e[i] % 2;
                 }
