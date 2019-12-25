@@ -53,7 +53,7 @@ namespace estd
 
         ~negative_index_vector() = default;
 
-        void init(size_type min, size_type max)
+        void assign(size_type min, size_type max)
         {
             assert(min <= max);
 
@@ -63,7 +63,7 @@ namespace estd
             data_ = container_type(max - min + 1);
         }
 
-        void init(size_type min, size_type max, const value_type& value)
+        void assign(size_type min, size_type max, const value_type& value)
         {
             assert(min <= max);
 

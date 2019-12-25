@@ -31,7 +31,7 @@ namespace tdcs
         const auto& filename = generate_prob_table_filename(pass_ratio, drift_stddev, max_drift, num_segments);
         const auto& filepath = prob_table_dir_ + filename;
 
-        probs_.init(-max_segment_, max_segment_, estd::nivector<double>(-max_segment_, max_segment_, 0.0));
+        probs_.assign(-max_segment_, max_segment_, estd::nivector<double>(-max_segment_, max_segment_, 0.0));
 
         {
             std::ifstream ifs(filepath);
