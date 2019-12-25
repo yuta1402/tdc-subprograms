@@ -27,7 +27,8 @@ namespace pcstdc
         exponent_code_length_{ calc_exponent_code_length(params.code_length) },
         max_segment_{ tdc_.params().max_drift * params_.num_segments },
         drift_transition_prob_{ tdc.params().pass_ratio, tdc.params().drift_stddev, tdc.params().max_drift, params.num_segments },
-        rec_calculations_{}
+        rec_calculations_{},
+        level0_calculations_{}
     {
         const size_t n = exponent_code_length_;
 
@@ -41,6 +42,11 @@ namespace pcstdc
                 rec_calculations_[k][m].assign(-max_segment_, max_segment_, estd::nivector<std::array<RecCalculationElement, 2>>(-max_segment_, max_segment_));
             }
         }
+
+        level0_calculations_.resize(params_.code_length);
+        for (size_t i = 0; i < params_.code_length; ++i) {
+            level0_calculations_[i].assign(-max_segment_, max_segment_, { -1.0, -1.0 });
+        }
     }
 
     void SCDecoder::init()
@@ -52,6 +58,10 @@ namespace pcstdc
             for (size_t m = 0; m < pownk; ++m) {
                 rec_calculations_[k][m].fill(estd::nivector<std::array<RecCalculationElement, 2>>(-max_segment_, max_segment_));
             }
+        }
+
+        for (size_t i = 0; i < params_.code_length; ++i) {
+            level0_calculations_[i].fill({ -1.0, -1.0 });
         }
     }
 
@@ -135,7 +145,18 @@ namespace pcstdc
         return p;
     }
 
-    long double SCDecoder::calc_level1(const int i, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z)
+    long double SCDecoder::calc_level0_rec(const int a, const int da, const int xa, const Eigen::RowVectorXi& z)
+    {
+        if (level0_calculations_[a][da][xa] != -1.0) {
+            return level0_calculations_[a][da][xa];
+        }
+
+        const long double r = calc_level0(a, da, xa, z);
+        level0_calculations_[a][da][xa] = r;
+        return r;
+    }
+
+    long double SCDecoder::calc_level1_rec(const int i, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z)
     {
         // g = (a + b) / 2
         const int g = ((a + b) >> 1);
@@ -145,15 +166,15 @@ namespace pcstdc
 
             // u[1][a+1] = 0
             u[0][a] = (u[1][a] + 0) % 2;
-            const long double wb0 = calc_level0(a, da, u[0][a], z);
+            const long double wb0 = calc_level0_rec(a, da, u[0][a], z);
             u[0][g] = 0;
-            const long double wg0 = calc_level0(g, db, u[0][g], z);
+            const long double wg0 = calc_level0_rec(g, db, u[0][g], z);
 
             // u[1][a+1] = 1
             u[0][a] = (u[1][a] + 1) % 2;
-            const long double wb1 = calc_level0(a, da, u[0][a], z);
+            const long double wb1 = calc_level0_rec(a, da, u[0][a], z);
             u[0][g] = 1;
-            const long double wg1 = calc_level0(g, db, u[0][g], z);
+            const long double wg1 = calc_level0_rec(g, db, u[0][g], z);
 
             r = (wb0 * wg0 + wb1 * wg1) * drift_transition_prob_(db, da);
             // r *= 0.5;
@@ -164,9 +185,9 @@ namespace pcstdc
         long double r = 0;
 
         u[0][a] = (u[1][a] + u[1][a+1]) % 2;
-        const long double wb = calc_level0(a, da, u[0][a], z);
+        const long double wb = calc_level0_rec(a, da, u[0][a], z);
         u[0][g] = u[1][a+1];
-        const long double wg = calc_level0(g, db, u[0][g], z);
+        const long double wg = calc_level0_rec(g, db, u[0][g], z);
         r += wb * wg * drift_transition_prob_(db, da);
         // r *= 0.5;
 
@@ -191,7 +212,7 @@ namespace pcstdc
         }
 
         if (k == 1) {
-            const long double r = calc_level1(i, a, b, da, db, u, z);
+            const long double r = calc_level1_rec(i, a, b, da, db, u, z);
 
             rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
             rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
