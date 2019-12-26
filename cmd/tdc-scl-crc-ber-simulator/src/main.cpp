@@ -6,8 +6,8 @@
 #include "estd/measure_time.hpp"
 #include "command_line.hpp"
 #include "channel/tdc.hpp"
-#include "pcstdc/polar_encoder.hpp"
-#include "pcstdc/scl_decoder.hpp"
+#include "pcstdc/polar_crc_encoder.hpp"
+#include "pcstdc/scl_crc_decoder.hpp"
 #include "pcstdc/frozen_bit_selector.hpp"
 #include "utl/ber_simulator.hpp"
 
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     }
 
     const size_t code_length                = p.get<size_t>("code-length"           , 1024);
-    const size_t info_length                = p.get<size_t>("info-length"           , 1024);
+    const size_t info_length                = p.get<size_t>("info-length"           , 512);
     const size_t num_threads                = p.get<size_t>("threads"               , 12);
     const size_t num_epochs                 = p.get<size_t>("epochs"                , 100);
     const size_t min_num_error_words        = p.get<size_t>("error-words"           , 100);
@@ -104,12 +104,19 @@ int main(int argc, char* argv[])
     decoder_params.info_length = info_length;
     decoder_params.num_segments = num_segments;
 
-    pcstdc::FrozenBitSelector selector(tdc, decoder_params, num_frozen_bit_simulations);
+    // g(x) = x^8 + x^7 + x^6 + x^4 + x^2 + 1
+    Eigen::RowVectorXi g(9);
+    g << 1, 1, 1, 0, 1, 0, 1, 0, 1;
+    utl::CRCHandler crc_handler(g);
+
+    auto params = decoder_params;
+    params.info_length = decoder_params.info_length + crc_handler.num_crc_bits();
+    pcstdc::FrozenBitSelector selector(tdc, params, num_frozen_bit_simulations);
     selector.parallel_select(num_threads);
     const auto& frozen_bits = selector.get_frozen_bits();
 
-    pcstdc::PolarEncoder encoder(code_length, info_length, frozen_bits);
-    pcstdc::SCLDecoder decoder(decoder_params, tdc, frozen_bits, list_size);
+    pcstdc::PolarCRCEncoder encoder(code_length, info_length, frozen_bits, crc_handler);
+    pcstdc::SCLCRCDecoder decoder(decoder_params, tdc, frozen_bits, crc_handler, list_size);
 
     utl::BERSimulatorOptions options;
     options.code_length = code_length;
@@ -119,7 +126,7 @@ int main(int argc, char* argv[])
     options.min_num_error_words = min_num_error_words;
     options.num_epochs = num_epochs;
 
-    utl::BERSimulator<channel::TDC, pcstdc::PolarEncoder, pcstdc::SCLDecoder> simulator(options, tdc, encoder, decoder);
+    utl::BERSimulator<channel::TDC, pcstdc::PolarCRCEncoder, pcstdc::SCLCRCDecoder> simulator(options, tdc, encoder, decoder);
     simulator.simulate();
 
     return 0;
