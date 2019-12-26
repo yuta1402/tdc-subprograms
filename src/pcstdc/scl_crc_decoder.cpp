@@ -68,7 +68,7 @@ namespace pcstdc
     Eigen::RowVectorXi SCLCRCDecoder::decode(const Eigen::RowVectorXi& y)
     {
         auto params = decoder_params_;
-        params.info_length += crc_handler_.num_crc_bits();
+        params.info_length = decoder_params_.info_length + crc_handler_.num_crc_bits();
         PathWrap init_path_wrap(params, tdc_, frozen_bits_);
         init_path_wrap.sc_decoder->init();
 
