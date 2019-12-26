@@ -165,13 +165,13 @@ namespace pcstdc
             long double r = 0;
 
             // u[1][a+1] = 0
-            u[0][a] = (u[1][a] ^ 0);
+            u[0][a] = (u[1][a] + 0) % 2;
             const long double wb0 = calc_level0_rec(a, da, u[0][a], z);
             u[0][g] = 0;
             const long double wg0 = calc_level0_rec(g, db, u[0][g], z);
 
             // u[1][a+1] = 1
-            u[0][a] = (u[1][a] ^ 1);
+            u[0][a] = (u[1][a] + 1) % 2;
             const long double wb1 = calc_level0_rec(a, da, u[0][a], z);
             u[0][g] = 1;
             const long double wg1 = calc_level0_rec(g, db, u[0][g], z);
@@ -184,7 +184,7 @@ namespace pcstdc
 
         long double r = 0;
 
-        u[0][a] = (u[1][a] ^ u[1][a+1]);
+        u[0][a] = (u[1][a] + u[1][a+1]) % 2;
         const long double wb = calc_level0_rec(a, da, u[0][a], z);
         u[0][g] = u[1][a+1];
         const long double wg = calc_level0_rec(g, db, u[0][g], z);
@@ -230,12 +230,12 @@ namespace pcstdc
 
             // dg0: d_{g-1}, dg1: d_{g}
             for (const auto& [dg0, dg1, dtp] : drift_transition_prob_.not_zero_range()) {
-                u[k-1][a+j] = (u[k][a+2*j] ^ 0);
+                u[k-1][a+j] = (u[k][a+2*j] + 0) % 2;
                 const long double wb0 = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
                 u[k-1][g+j] = 0;
                 const long double wg0 = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, z);
 
-                u[k-1][a+j] = (u[k][a+2*j] ^ 1);
+                u[k-1][a+j] = (u[k][a+2*j] + 1) % 2;
                 const long double wb1 = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
                 u[k-1][g+j] = 1;
                 const long double wg1 = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, z);
@@ -253,7 +253,7 @@ namespace pcstdc
 
         // dg0: d_{g-1}, dg1: d_{g}
         for (const auto& [dg0, dg1, dtp] : drift_transition_prob_.not_zero_range()) {
-            u[k-1][a+j] = (u[k][a+2*j] ^ u[k][a+2*j+1]);
+            u[k-1][a+j] = (u[k][a+2*j] + u[k][a+2*j+1]) % 2;
             const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
             u[k-1][g+j] = u[k][a+2*j+1];
             const long double wg = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, z);
