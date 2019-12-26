@@ -4,6 +4,7 @@ set(target pcstdc)
 
 set(sources
     ./sc_decoder.cpp
+    ./scl_decoder.cpp
     ./info_table_handler.cpp
     ./polar_encoder.cpp
     ./frozen_bit_selector.cpp
