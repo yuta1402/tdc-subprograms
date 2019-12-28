@@ -35,11 +35,16 @@ namespace pcstdc
         rec_calculations_.resize(n+1);
 
         for (size_t k = 0; k <= n; ++k) {
-            const size_t pownk = std::pow(2, n-k);
-            rec_calculations_[k].resize(pownk);
+            const size_t powk = std::pow(2, k);
+            rec_calculations_[k].resize(powk);
 
-            for (size_t m = 0; m < pownk; ++m) {
-                rec_calculations_[k][m].assign(-max_segment_, max_segment_, estd::nivector<std::array<RecCalculationElement, 2>>(-max_segment_, max_segment_));
+            for (size_t i = 0; i < powk; ++i) {
+                const size_t pownk = std::pow(2, n-k);
+                rec_calculations_[k][i].resize(pownk);
+
+                for (size_t m = 0; m < pownk; ++m) {
+                    rec_calculations_[k][i][m].assign(-max_segment_, max_segment_, estd::nivector<RecCalculationElement>(-max_segment_, max_segment_, { -1.0, -1.0 }));
+                }
             }
         }
 
@@ -54,9 +59,12 @@ namespace pcstdc
         const size_t n = exponent_code_length_;
 
         for (size_t k = 0; k <= n; ++k) {
-            const size_t pownk = std::pow(2, n-k);
-            for (size_t m = 0; m < pownk; ++m) {
-                rec_calculations_[k][m].fill(estd::nivector<std::array<RecCalculationElement, 2>>(-max_segment_, max_segment_));
+            const size_t powk = std::pow(2, k);
+            for (size_t i = 0; i < powk; ++i) {
+                const size_t pownk = std::pow(2, n-k);
+                for (size_t m = 0; m < pownk; ++m) {
+                    rec_calculations_[k][i][m].fill(estd::nivector<RecCalculationElement>(-max_segment_, max_segment_, { -1.0, -1.0 }));
+                }
             }
         }
 
@@ -206,16 +214,15 @@ namespace pcstdc
         const int m = (a >> k);
 
         // 過去に同じ引数で呼び出しがあった場合は保存した結果を返す
-        const auto& dp = rec_calculations_[k][m][da][db][u[k][a+i]];
-        if (dp.prev_index == i && dp.value != -1.0) {
-            return dp.value;
+        const auto& dp = rec_calculations_[k][i][m][da][db][u[k][a+i]];
+        if (dp != -1.0) {
+            return dp;
         }
 
         if (k == 1) {
             const long double r = calc_level1_rec(i, a, b, da, db, u, z);
 
-            rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
-            rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
+            rec_calculations_[k][i][m][da][db][u[k][a+i]] = r;
             return r;
         }
 
@@ -244,8 +251,7 @@ namespace pcstdc
             }
             // r *= 0.5;
 
-            rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
-            rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
+            rec_calculations_[k][i][m][da][db][u[k][a+i]] = r;
             return r;
         }
 
@@ -261,8 +267,7 @@ namespace pcstdc
         }
         // r *= 0.5;
 
-        rec_calculations_[k][m][da][db][u[k][a+i]].prev_index = i;
-        rec_calculations_[k][m][da][db][u[k][a+i]].value = r;
+        rec_calculations_[k][i][m][da][db][u[k][a+i]] = r;
         return r;
     }
 }
