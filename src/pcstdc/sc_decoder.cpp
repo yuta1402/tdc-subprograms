@@ -35,11 +35,11 @@ namespace pcstdc
         rec_calculations_.resize(n+1);
 
         for (size_t k = 0; k <= n; ++k) {
-            const size_t powk = std::pow(2, k);
+            const size_t powk = (1 << k);
             rec_calculations_[k].resize(powk);
 
             for (size_t i = 0; i < powk; ++i) {
-                const size_t pownk = std::pow(2, n-k);
+                const size_t pownk = (1 << (n-k));
                 rec_calculations_[k][i].resize(pownk);
 
                 for (size_t m = 0; m < pownk; ++m) {
@@ -59,9 +59,9 @@ namespace pcstdc
         const size_t n = exponent_code_length_;
 
         for (size_t k = 0; k <= n; ++k) {
-            const size_t powk = std::pow(2, k);
+            const size_t powk = (1 << k);
             for (size_t i = 0; i < powk; ++i) {
-                const size_t pownk = std::pow(2, n-k);
+                const size_t pownk = (1 << (n-k));
                 for (size_t m = 0; m < pownk; ++m) {
                     rec_calculations_[k][i][m].fill(estd::nivector<std::array<long double, 2>>(-max_segment_, max_segment_, { -1.0, -1.0 }));
                 }
