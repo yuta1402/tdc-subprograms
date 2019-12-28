@@ -127,8 +127,9 @@ void FrozeBitAnalyzer::step()
             }
             u.init(zz);
 
-            const long double llg = decoder.calc_likelihood(i,   z[i], u, y);
-            const long double llb = decoder.calc_likelihood(i, 1-z[i], u, y);
+            const auto& ll = decoder.calc_likelihood(i, u, y);
+            const long double llg = ll[z[i]];
+            const long double llb = ll[z[i] ^ 1];
             const long double sum = llg + llb;
 
             long double c = 0.0;
@@ -174,8 +175,9 @@ void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
             }
             u.init(zz);
 
-            const long double llg = decoder.calc_likelihood(i,   z[i], u, y);
-            const long double llb = decoder.calc_likelihood(i, 1-z[i], u, y);
+            const auto& ll = decoder.calc_likelihood(i, u, y);
+            const long double llg = ll[z[i]];
+            const long double llb = ll[z[i] ^ 1];
             const long double sum = llg + llb;
 
             long double c = 0.0;
