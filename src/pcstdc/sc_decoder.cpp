@@ -88,9 +88,6 @@ namespace pcstdc
             if (frozen_bits_[i]) {
                 x[i] = 0;
             } else {
-                // const long double ll0 = calc_likelihood(i, u, z);
-                // const long double ll1 = calc_likelihood(i, u, z);
-
                 const auto& ll = calc_likelihood(i, u, z);
 
                 if (ll[0] >= ll[1]) {
