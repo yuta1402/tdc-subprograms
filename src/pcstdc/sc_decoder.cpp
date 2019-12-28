@@ -43,7 +43,7 @@ namespace pcstdc
                 rec_calculations_[k][i].resize(pownk);
 
                 for (size_t m = 0; m < pownk; ++m) {
-                    rec_calculations_[k][i][m].assign(-max_segment_, max_segment_, estd::nivector<RecCalculationElement>(-max_segment_, max_segment_, { -1.0, -1.0 }));
+                    rec_calculations_[k][i][m].assign(-max_segment_, max_segment_, estd::nivector<std::array<long double, 2>>(-max_segment_, max_segment_, { -1.0, -1.0 }));
                 }
             }
         }
@@ -63,7 +63,7 @@ namespace pcstdc
             for (size_t i = 0; i < powk; ++i) {
                 const size_t pownk = std::pow(2, n-k);
                 for (size_t m = 0; m < pownk; ++m) {
-                    rec_calculations_[k][i][m].fill(estd::nivector<RecCalculationElement>(-max_segment_, max_segment_, { -1.0, -1.0 }));
+                    rec_calculations_[k][i][m].fill(estd::nivector<std::array<long double, 2>>(-max_segment_, max_segment_, { -1.0, -1.0 }));
                 }
             }
         }
@@ -88,10 +88,12 @@ namespace pcstdc
             if (frozen_bits_[i]) {
                 x[i] = 0;
             } else {
-                const long double ll0 = calc_likelihood(i, 0, u, z);
-                const long double ll1 = calc_likelihood(i, 1, u, z);
+                // const long double ll0 = calc_likelihood(i, u, z);
+                // const long double ll1 = calc_likelihood(i, u, z);
 
-                if (ll0 >= ll1) {
+                const auto& ll = calc_likelihood(i, u, z);
+
+                if (ll[0] >= ll[1]) {
                     x[i] = 0;
                 } else {
                     x[i] = 1;
@@ -113,20 +115,21 @@ namespace pcstdc
         return m;
     }
 
-    long double SCDecoder::calc_likelihood(const int i, const int ui, InfoTable& u, const Eigen::RowVectorXi& z)
+    std::array<long double, 2> SCDecoder::calc_likelihood(const int i, InfoTable& u, const Eigen::RowVectorXi& z)
     {
         const size_t n = exponent_code_length_;
 
-        long double ll = 0.0;
+        std::array<long double, 2> ll{ 0.0, 0.0 };
         for (int dn = -max_segment_; dn <= max_segment_; ++dn) {
-            u[n][i] = ui;
-            ll += calc_likelihood_rec(i, n, 0, params_.code_length, 0, dn, u, z);
+            const auto& w = calc_likelihood_rec(i, n, 0, params_.code_length, 0, dn, u, z);
+            ll[0] += w[0];
+            ll[1] += w[1];
         }
 
         return ll;
     }
 
-    long double SCDecoder::calc_level0(const int a, const int da, const int xa, const Eigen::RowVectorXi& z)
+    std::array<long double, 2> SCDecoder::calc_level0(const int a, const int da, const Eigen::RowVectorXi& z)
     {
         const double real_da = static_cast<double>(da) / params_.num_segments;
         const int rounded_da = std::floor(real_da + 0.5);
@@ -135,94 +138,80 @@ namespace pcstdc
         const int j = a + rounded_da;
 
         if (j < 0 || static_cast<int>(params_.code_length) <= j) {
-            return 1.0;
+            return { 1.0, 1.0 };
         }
 
         const double pass_ratio_bound = tdc_.params().pass_ratio * 0.5;
         if (rest_da <= -pass_ratio_bound || pass_ratio_bound <= rest_da) {
-            return 0.5;
+            return { 0.5, 0.5 };
         }
 
-        double p = 0.0;
-        if (xa == z[j]) {
-            p = 1.0 - tdc_.params().ps;
+        std::array<long double, 2> p;
+
+        if (z[j] == 0) {
+            p[0] = 1.0 - tdc_.params().ps;
+            p[1] = tdc_.params().ps;
         } else {
-            p = tdc_.params().ps;
+            p[0] = tdc_.params().ps;
+            p[1] = 1.0 - tdc_.params().ps;
         }
 
         return p;
     }
 
-    long double SCDecoder::calc_level0_rec(const int a, const int da, const int xa, const Eigen::RowVectorXi& z)
+    std::array<long double, 2> SCDecoder::calc_level0_rec(const int a, const int da, const Eigen::RowVectorXi& z)
     {
-        if (level0_calculations_[a][da][xa] != -1.0) {
-            return level0_calculations_[a][da][xa];
+        if (level0_calculations_[a][da][0] != -1.0) {
+            return level0_calculations_[a][da];
         }
 
-        const long double r = calc_level0(a, da, xa, z);
-        level0_calculations_[a][da][xa] = r;
+        const auto& r = calc_level0(a, da, z);
+        level0_calculations_[a][da] = r;
         return r;
     }
 
-    long double SCDecoder::calc_level1_rec(const int i, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z)
+    std::array<long double, 2> SCDecoder::calc_level1_rec(const int i, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z)
     {
         // g = (a + b) / 2
         const int g = ((a + b) >> 1);
 
-        if (i % 2 == 0) {
-            long double r = 0;
+        std::array<long double, 2> r;
+        const auto& wb = calc_level0_rec(a, da, z);
+        const auto& wg = calc_level0_rec(g, db, z);
 
-            // u[1][a+1] = 0
-            u[0][a] = (u[1][a] + 0) % 2;
-            const long double wb0 = calc_level0_rec(a, da, u[0][a], z);
-            u[0][g] = 0;
-            const long double wg0 = calc_level0_rec(g, db, u[0][g], z);
-
-            // u[1][a+1] = 1
-            u[0][a] = (u[1][a] + 1) % 2;
-            const long double wb1 = calc_level0_rec(a, da, u[0][a], z);
-            u[0][g] = 1;
-            const long double wg1 = calc_level0_rec(g, db, u[0][g], z);
-
-            r = (wb0 * wg0 + wb1 * wg1) * drift_transition_prob_(db, da);
-            // r *= 0.5;
-
-            return r;
+        if (i & 1) {
+            // odd-index
+            r[0] = wb[u[1][a]]   * wg[0] * drift_transition_prob_(db, da);
+            r[1] = wb[u[1][a]^1] * wg[1] * drift_transition_prob_(db, da);
+        } else {
+            // even-index
+            r[0] = (wb[0] * wg[0] + wb[1] * wg[1]) * drift_transition_prob_(db, da);
+            r[1] = (wb[1] * wg[0] + wb[0] * wg[1]) * drift_transition_prob_(db, da);
         }
-
-        long double r = 0;
-
-        u[0][a] = (u[1][a] + u[1][a+1]) % 2;
-        const long double wb = calc_level0_rec(a, da, u[0][a], z);
-        u[0][g] = u[1][a+1];
-        const long double wg = calc_level0_rec(g, db, u[0][g], z);
-        r += wb * wg * drift_transition_prob_(db, da);
-        // r *= 0.5;
 
         return r;
     }
 
-    long double SCDecoder::calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z)
+    std::array<long double, 2> SCDecoder::calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z)
     {
         // daとdbの差による刈り込み
         const int max_num_transitions = drift_transition_prob_.max_num_transitions();
         if (abs(db-da) > max_num_transitions * (1 << k)) {
-            return 0.0;
+            return { 0.0, 0.0 };
         }
 
         // m = a / 2^k
         const int m = (a >> k);
 
         // 過去に同じ引数で呼び出しがあった場合は保存した結果を返す
-        const auto& dp = rec_calculations_[k][i][m][da][db][u[k][a+i]];
-        if (dp != -1.0) {
+        const auto& dp = rec_calculations_[k][i][m][da][db];
+        if (dp[0] != -1.0) {
             return dp;
         }
 
         if (k == 1) {
-            const long double r = calc_level1_rec(i, a, b, da, db, u, z);
-
-            rec_calculations_[k][i][m][da][db][u[k][a+i]] = r;
+            const auto& r = calc_level1_rec(i, a, b, da, db, u, z);
+            rec_calculations_[k][i][m][da][db] = r;
             return r;
         }
 
@@ -232,42 +221,26 @@ namespace pcstdc
         // g = (a + b) / 2
         const int g = ((a + b) >> 1);
 
-        if (i % 2 == 0) {
-            long double r = 0;
-
-            // dg0: d_{g-1}, dg1: d_{g}
-            for (const auto& [dg0, dg1, dtp] : drift_transition_prob_.not_zero_range()) {
-                u[k-1][a+j] = (u[k][a+2*j] + 0) % 2;
-                const long double wb0 = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
-                u[k-1][g+j] = 0;
-                const long double wg0 = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, z);
-
-                u[k-1][a+j] = (u[k][a+2*j] + 1) % 2;
-                const long double wb1 = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
-                u[k-1][g+j] = 1;
-                const long double wg1 = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, z);
-
-                r += (wb0 * wg0 + wb1 * wg1) * dtp;
-            }
-            // r *= 0.5;
-
-            rec_calculations_[k][i][m][da][db][u[k][a+i]] = r;
-            return r;
-        }
-
-        long double r = 0;
+        std::array<long double, 2> r{ 0.0, 0.0 };
 
         // dg0: d_{g-1}, dg1: d_{g}
         for (const auto& [dg0, dg1, dtp] : drift_transition_prob_.not_zero_range()) {
-            u[k-1][a+j] = (u[k][a+2*j] + u[k][a+2*j+1]) % 2;
-            const long double wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
-            u[k-1][g+j] = u[k][a+2*j+1];
-            const long double wg = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, z);
-            r += wb * wg * dtp;
+            const auto& wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
+            const auto& wg = calc_likelihood_rec(j, k-1, g, b, dg1, db, u, z);
+
+            if (i & 1) {
+                // odd-index
+                r[0] += wb[u[k][a+2*j]]   * wg[0] * dtp;
+                r[1] += wb[u[k][a+2*j]^1] * wg[1] * dtp;
+            } else {
+                // even-index
+                r[0] += (wb[0] * wg[0] + wb[1] * wg[1]) * dtp;
+                r[1] += (wb[1] * wg[0] + wb[0] * wg[1]) * dtp;
+            }
         }
         // r *= 0.5;
 
-        rec_calculations_[k][i][m][da][db][u[k][a+i]] = r;
+        rec_calculations_[k][i][m][da][db] = r;
         return r;
     }
 }

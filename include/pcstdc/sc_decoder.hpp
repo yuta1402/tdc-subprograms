@@ -31,9 +31,8 @@ namespace pcstdc
     {
     public:
         using InfoTable = InfoTableHandler;
-        using RecCalculationElement = std::array<long double, 2>;
-        using RecCalculations = std::vector<std::vector<std::vector<estd::nivector<estd::nivector<RecCalculationElement>>>>>;
-        using Level0Calculations = std::vector<estd::nivector<RecCalculationElement>>;
+        using RecCalculations = std::vector<std::vector<std::vector<estd::nivector<estd::nivector<std::array<long double, 2>>>>>>;
+        using Level0Calculations = std::vector<estd::nivector<std::array<long double, 2>>>;
 
     public:
         SCDecoder(const SCDecoderParams& params, const channel::TDC& tdc, const std::vector<int>& frozen_bits);
@@ -42,11 +41,11 @@ namespace pcstdc
         void init();
 
         Eigen::RowVectorXi decode(const Eigen::RowVectorXi& z);
-        long double calc_likelihood(const int i, const int ui, InfoTable& u, const Eigen::RowVectorXi& z);
-        long double calc_level0(const int a, const int da, const int xa, const Eigen::RowVectorXi& z);
-        long double calc_level0_rec(const int a, const int da, const int xa, const Eigen::RowVectorXi& z);
-        long double calc_level1_rec(const int i, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z);
-        long double calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z);
+        std::array<long double, 2> calc_likelihood(const int i, InfoTable& u, const Eigen::RowVectorXi& z);
+        std::array<long double, 2> calc_level0(const int a, const int da, const Eigen::RowVectorXi& z);
+        std::array<long double, 2> calc_level0_rec(const int a, const int da, const Eigen::RowVectorXi& z);
+        std::array<long double, 2> calc_level1_rec(const int i, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z);
+        std::array<long double, 2> calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z);
 
     private:
         SCDecoderParams params_;
