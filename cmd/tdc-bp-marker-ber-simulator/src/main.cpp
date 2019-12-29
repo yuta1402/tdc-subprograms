@@ -24,7 +24,6 @@ int main(int argc, char* argv[])
     p.add("error-words"            , 'w', "the minimum of count of error words", true);
     p.add("seed"                   , 'r', "the seed of random device", true);
     p.add("max-simulations"        , 's', "the maximum of simulation", true);
-    p.add("frozen-bit-simulations" , 'f', "the number of simulations to determinate of frozen bits", true);
 
     // channel params
     p.add("ps"          , '0', "the probability of substitution error for Timing Drift Channel", true);
@@ -54,7 +53,6 @@ int main(int argc, char* argv[])
     const size_t min_num_error_words        = p.get<size_t>("error-words"           , 100);
     const size_t seed                       = p.get<size_t>("seed"                  , 0);
     const size_t max_num_simulations        = p.get<size_t>("max-simulations"       , 10000);
-    const size_t num_frozen_bit_simulations = p.get<size_t>("frozen-bit-simulations", 1000);
 
     // channel params
     const double ps           = p.get<double>("ps"          , 1e-2);
@@ -106,7 +104,6 @@ int main(int argc, char* argv[])
               << "    num epochs: " << num_epochs << '\n'
               << "    min num error words: " << min_num_error_words << '\n'
               << "    max num simulations: " << max_num_simulations << '\n'
-              << "    num simulations (frozen bit): " << num_frozen_bit_simulations << '\n'
               << std::endl;
 
     channel::TDCParams tdc_params;
