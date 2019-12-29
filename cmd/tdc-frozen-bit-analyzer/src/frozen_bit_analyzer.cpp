@@ -93,7 +93,8 @@ FrozeBitAnalyzer::FrozeBitAnalyzer(const size_t code_length, const size_t info_l
     channel_{ channel },
     decoder_params_{ decoder_params },
     simulation_count_{ 0 },
-    sum_capacities_( code_length )
+    sum_capacities_( code_length ),
+    error_bit_counts_( code_length_, 0 )
 {
     for (size_t i = 0; i < sum_capacities_.size(); ++i) {
         sum_capacities_[i].first = i;
@@ -191,6 +192,16 @@ void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
             {
                 std::lock_guard<std::mutex> lock(mtx);
                 sum_capacities_[i].second += c;
+
+                if (z[i] == 0) {
+                    if (ll[0] < ll[1]) {
+                        error_bit_counts_[i]++;
+                    }
+                } else {
+                    if (ll[1] <= ll[0]) {
+                        error_bit_counts_[i]++;
+                    }
+                }
             }
         }
     }, num_threads);
@@ -226,7 +237,7 @@ void FrozeBitAnalyzer::parallel_analyze(const size_t num_threads)
 {
     std::vector<int> prev_frozen_bits(code_length_, 0);
 
-    std::cout << "simulations, hamming distance" << std::endl;
+    std::cout << "simulations, hamming distance, bec, bler, ber" << std::endl;
 
     while (simulation_count_ < num_simulation_) {
         parallel_step(num_threads);
@@ -235,9 +246,23 @@ void FrozeBitAnalyzer::parallel_analyze(const size_t num_threads)
         auto current_frozen_bits = make_frozen_bits(capacities, info_length_);
         size_t d = calc_hamming_distance(prev_frozen_bits, current_frozen_bits);
 
+        size_t num_error_bits = 0;
+        for (size_t i = 0; i < code_length_; ++i) {
+            // 情報ビットのエラービット数を計算
+            if (!current_frozen_bits[i]) {
+                num_error_bits += error_bit_counts_[i];
+            }
+        }
+
+        const double bler = std::min(1.0, static_cast<double>(num_error_bits) / simulation_count_);
+        const double ber  = static_cast<double>(num_error_bits) / (code_length_ * simulation_count_);
+
         std::cout << std::setw(utl::num_digits(num_simulation_)) << std::right << simulation_count_
-            << ", "
-            << std::setw(utl::num_digits(code_length_)) << std::right << d
+            << ", " << std::setw(utl::num_digits(code_length_)) << std::right << d
+            << ", " << std::setw(utl::num_digits(num_simulation_*code_length_)) << std::right << num_error_bits
+            << std::scientific << std::setprecision(4)
+            << ", " << bler
+            << ", " << ber
             << std::endl;
 
         std::swap(prev_frozen_bits, current_frozen_bits);

@@ -32,6 +32,7 @@ private:
 
     size_t simulation_count_;
     std::vector<std::pair<size_t, long double>> sum_capacities_;
+    std::vector<size_t> error_bit_counts_;
 };
 
 #endif
