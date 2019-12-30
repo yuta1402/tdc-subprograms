@@ -21,6 +21,9 @@ public:
     void analyze();
     void parallel_analyze(const size_t num_threads = std::thread::hardware_concurrency());
 
+    bool read_cache();
+    bool write_cache();
+
 private:
     const size_t code_length_;
     const size_t info_length_;
@@ -31,8 +34,11 @@ private:
     const pcstdc::SCDecoderParams& decoder_params_;
 
     size_t simulation_count_;
-    std::vector<std::pair<size_t, long double>> sum_capacities_;
+    std::vector<long double> sum_capacities_;
     std::vector<size_t> error_bit_counts_;
+    std::vector<int> prev_frozen_bits_;
+
+    std::string cache_filename_;
 };
 
 #endif
