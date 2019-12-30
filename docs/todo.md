@@ -15,6 +15,7 @@
 - [x] lcs::BPDecoderの移植
 - [x] lcstdc::BPMarkerDecoderの実装
 - [x] lcstdc::BPMarkerEncoderの実装
+- [ ] FrozenBitAnalyzerに計算保存機能をつける
 
 ## SC Decoderの最適化
 - [ ] level0の計算結果を保存して再利用
