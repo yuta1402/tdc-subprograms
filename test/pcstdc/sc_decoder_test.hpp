@@ -26,39 +26,39 @@ void sc_decoder_calc_level0_test()
     z << 0, 1, 0, 1, 0, 1, 0, 1;
 
     {
-        double p;
-        p = decoder.calc_level0(0, -2, 0, z); eassert(p == 1.0, "p == %lf", p);
-        p = decoder.calc_level0(0, -1, 0, z); eassert(p == 0.5, "p == %lf", p);
-        p = decoder.calc_level0(0,  0, 0, z); eassert(p == 1.0-ps, "p == %lf, ps == %lf", p, ps);
-        p = decoder.calc_level0(0,  1, 0, z); eassert(p == 0.5, "p == %lf", p);
-        p = decoder.calc_level0(0,  2, 0, z); eassert(p == ps, "p == %lf, ps == %lf", p, ps);
+        std::array<long double, 2> p;
+        p = decoder.calc_level0(0, -2, z); eassert(p[0] == 1.0, "p == %Lf", p[0]);
+        p = decoder.calc_level0(0, -1, z); eassert(p[0] == 0.5, "p == %Lf", p[0]);
+        p = decoder.calc_level0(0,  0, z); eassert(p[0] == 1.0-ps, "p == %Lf, ps == %lf", p[0], ps);
+        p = decoder.calc_level0(0,  1, z); eassert(p[0] == 0.5, "p == %Lf", p[0]);
+        p = decoder.calc_level0(0,  2, z); eassert(p[0] == ps, "p == %Lf, ps == %lf", p[0], ps);
     }
 
     {
-        double p;
-        p = decoder.calc_level0(0, -2, 1, z); eassert(p == 1.0, "p == %lf", p);
-        p = decoder.calc_level0(0, -1, 1, z); eassert(p == 0.5, "p == %lf", p);
-        p = decoder.calc_level0(0,  0, 1, z); eassert(p == ps, "p == %lf, ps == %lf", p, ps);
-        p = decoder.calc_level0(0,  1, 1, z); eassert(p == 0.5, "p == %lf", p);
-        p = decoder.calc_level0(0,  2, 1, z); eassert(p == 1.0-ps, "p == %lf, ps == %lf", p, ps);
+        std::array<long double, 2> p;
+        p = decoder.calc_level0(0, -2, z); eassert(p[1] == 1.0, "p[1] == %Lf", p[1]);
+        p = decoder.calc_level0(0, -1, z); eassert(p[1] == 0.5, "p[1] == %Lf", p[1]);
+        p = decoder.calc_level0(0,  0, z); eassert(p[1] == ps, "p[1] == %Lf, ps == %lf", p[1], ps);
+        p = decoder.calc_level0(0,  1, z); eassert(p[1] == 0.5, "p[1] == %Lf", p[1]);
+        p = decoder.calc_level0(0,  2, z); eassert(p[1] == 1.0-ps, "p[1] == %Lf, ps == %lf", p[1], ps);
     }
 
     {
-        double p;
-        p = decoder.calc_level0(1, -2, 0, z); eassert(p == 1.0-ps, "p == %lf, ps == %lf", p, ps);
-        p = decoder.calc_level0(1, -1, 0, z); eassert(p == 0.5, "p == %lf", p);
-        p = decoder.calc_level0(1,  0, 0, z); eassert(p == ps, "p == %lf, ps == %lf", p, ps);
-        p = decoder.calc_level0(1,  1, 0, z); eassert(p == 0.5, "p == %lf", p);
-        p = decoder.calc_level0(1,  2, 0, z); eassert(p == 1.0-ps, "p == %lf, ps == %lf", p, ps);
+        std::array<long double, 2> p;
+        p = decoder.calc_level0(1, -2, z); eassert(p[0] == 1.0-ps, "p == %Lf, ps == %lf", p[0], ps);
+        p = decoder.calc_level0(1, -1, z); eassert(p[0] == 0.5, "p == %Lf", p[0]);
+        p = decoder.calc_level0(1,  0, z); eassert(p[0] == ps, "p == %Lf, ps == %lf", p[0], ps);
+        p = decoder.calc_level0(1,  1, z); eassert(p[0] == 0.5, "p == %Lf", p[0]);
+        p = decoder.calc_level0(1,  2, z); eassert(p[0] == 1.0-ps, "p == %Lf, ps == %lf", p[0], ps);
     }
 
     {
-        double p;
-        p = decoder.calc_level0(1, -2, 1, z); eassert(p == ps, "p == %lf, ps == %lf", p, ps);
-        p = decoder.calc_level0(1, -1, 1, z); eassert(p == 0.5, "p == %lf", p);
-        p = decoder.calc_level0(1,  0, 1, z); eassert(p == 1.0-ps, "p == %lf, ps == %lf", p, ps);
-        p = decoder.calc_level0(1,  1, 1, z); eassert(p == 0.5, "p == %lf", p);
-        p = decoder.calc_level0(1,  2, 1, z); eassert(p == ps, "p == %lf, ps == %lf", p, ps);
+        std::array<long double, 2> p;
+        p = decoder.calc_level0(1, -2, z); eassert(p[1] == ps, "p == %Lf, ps == %lf", p[1], ps);
+        p = decoder.calc_level0(1, -1, z); eassert(p[1] == 0.5, "p == %Lf", p[1]);
+        p = decoder.calc_level0(1,  0, z); eassert(p[1] == 1.0-ps, "p == %Lf, ps == %lf", p[1], ps);
+        p = decoder.calc_level0(1,  1, z); eassert(p[1] == 0.5, "p == %Lf", p[1]);
+        p = decoder.calc_level0(1,  2, z); eassert(p[1] == ps, "p == %Lf, ps == %lf", p[1], ps);
     }
 }
 

@@ -98,7 +98,6 @@ namespace estd
         size_t i = 0;
         for (; i < n - step; i += step) {
             auto seed = engine();
-
             threads.emplace_back([=, &f](){
                 Reseed(seed);
                 for (size_t j = i; j < i + step; ++j) {
@@ -107,7 +106,9 @@ namespace estd
             });
         }
 
+        auto seed = engine();
         threads.emplace_back([=, &f](){
+            Reseed(seed);
             for (size_t j = i; j < n; ++j) {
                 f(j);
             }
@@ -139,14 +140,15 @@ namespace estd
 
         for(; begin < end - step; begin += step) {
             auto seed = engine();
-
             threads.emplace_back([=, &f](){
                 Reseed(seed);
                 std::for_each(begin, begin + step, f);
             });
         }
 
+        auto seed = engine();
         threads.emplace_back([=, &f](){
+            Reseed(seed);
             std::for_each(begin, end, f);
         });
 

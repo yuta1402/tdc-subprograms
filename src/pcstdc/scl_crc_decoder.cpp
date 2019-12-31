@@ -84,13 +84,12 @@ namespace pcstdc
                 std::vector<PathLikelihoodWrap> candidates;
 
                 for (auto&& p : path_likelihood_wraps) {
-                    const long double ll0 = p.path_wrap.sc_decoder->calc_likelihood(i, 0, p.path_wrap.info_table, y);
-                    const long double ll1 = p.path_wrap.sc_decoder->calc_likelihood(i, 1, p.path_wrap.info_table, y);
+                    const auto& ll = p.path_wrap.sc_decoder->calc_likelihood(i, p.path_wrap.info_table, y);
 
                     p.path_wrap.path[i] = 0;
-                    candidates.emplace_back(0, ll0, p.path_wrap);
+                    candidates.emplace_back(0, ll[0], p.path_wrap);
                     p.path_wrap.path[i] = 1;
-                    candidates.emplace_back(1, ll1, p.path_wrap);
+                    candidates.emplace_back(1, ll[1], p.path_wrap);
                 }
 
                 std::sort(

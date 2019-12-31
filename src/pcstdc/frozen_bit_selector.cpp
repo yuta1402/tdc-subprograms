@@ -118,8 +118,11 @@ namespace pcstdc
                 }
                 u.init(zz);
 
-                const long double llg = decoder.calc_likelihood(i,   z[i], u, y);
-                const long double llb = decoder.calc_likelihood(i, 1-z[i], u, y);
+                const auto& ll = decoder.calc_likelihood(i, u, y);
+
+                const long double llg = ll[z[i]];
+                const long double llb = ll[z[i] ^ 1];
+
                 const long double sum = llg + llb;
 
                 double c = 0.0;
@@ -175,8 +178,11 @@ namespace pcstdc
                 }
                 u.init(zz);
 
-                const long double llg = decoder.calc_likelihood(i,   z[i], u, y);
-                const long double llb = decoder.calc_likelihood(i, 1-z[i], u, y);
+                const auto& ll = decoder.calc_likelihood(i, u, y);
+
+                const long double llg = ll[z[i]];
+                const long double llb = ll[z[i] ^ 1];
+
                 const long double sum = llg + llb;
 
                 double c = 0.0;

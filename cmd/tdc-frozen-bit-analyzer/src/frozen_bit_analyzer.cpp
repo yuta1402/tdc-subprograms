@@ -46,12 +46,13 @@ namespace
         return true;
     }
 
-    std::vector<std::pair<size_t, long double>> calc_capacity(const std::vector<std::pair<size_t, long double>>& sum_capacities, const size_t num_simulation)
+    std::vector<std::pair<size_t, long double>> calc_capacity(const std::vector<long double>& sum_capacities, const size_t num_simulation)
     {
-        auto capacities = sum_capacities;
+        std::vector<std::pair<size_t, long double>> capacities(sum_capacities.size());
 
         for (size_t i = 0; i < capacities.size(); ++i) {
-            capacities[i].second /= num_simulation;
+            capacities[i].first = i;
+            capacities[i].second = sum_capacities[i] / num_simulation;
         }
 
         std::sort(begin(capacities), end(capacities), [](const auto& c1, const auto& c2){
@@ -83,6 +84,23 @@ namespace
 
         return d;
     }
+
+    std::string generate_cache_filename(const size_t code_length, const size_t info_length, const channel::TDCParams& tdc_params, const pcstdc::SCDecoderParams& decoder_params)
+    {
+        std::stringstream ss;
+        ss << "fba_cache"
+           << "_n" << code_length
+           << "_k" << info_length
+           << std::defaultfloat
+           << "_ps" << tdc_params.ps
+           << "_r" << tdc_params.pass_ratio
+           << "_v" << tdc_params.drift_stddev
+           << "_md" << tdc_params.max_drift
+           << "_seg" << decoder_params.num_segments
+           << ".dat";
+
+        return ss.str();
+    }
 }
 
 FrozeBitAnalyzer::FrozeBitAnalyzer(const size_t code_length, const size_t info_length, const channel::TDC& channel, const pcstdc::SCDecoderParams& decoder_params, const size_t num_simulation, const size_t num_epoch) :
@@ -93,12 +111,11 @@ FrozeBitAnalyzer::FrozeBitAnalyzer(const size_t code_length, const size_t info_l
     channel_{ channel },
     decoder_params_{ decoder_params },
     simulation_count_{ 0 },
-    sum_capacities_( code_length )
+    sum_capacities_( code_length, 0.0 ),
+    error_bit_counts_( code_length_, 0 ),
+    prev_frozen_bits_( code_length_, 0 ),
+    cache_filename_{ generate_cache_filename(code_length, info_length, channel.params(), decoder_params) }
 {
-    for (size_t i = 0; i < sum_capacities_.size(); ++i) {
-        sum_capacities_[i].first = i;
-        sum_capacities_[i].second = 0.0;
-    }
 }
 
 void FrozeBitAnalyzer::step()
@@ -127,8 +144,9 @@ void FrozeBitAnalyzer::step()
             }
             u.init(zz);
 
-            const long double llg = decoder.calc_likelihood(i,   z[i], u, y);
-            const long double llb = decoder.calc_likelihood(i, 1-z[i], u, y);
+            const auto& ll = decoder.calc_likelihood(i, u, y);
+            const long double llg = ll[z[i]];
+            const long double llb = ll[z[i] ^ 1];
             const long double sum = llg + llb;
 
             long double c = 0.0;
@@ -139,7 +157,7 @@ void FrozeBitAnalyzer::step()
                 c = std::clamp(c, 0.0l, 1.0l);
             }
 
-            sum_capacities_[i].second += c;
+            sum_capacities_[i] += c;
         }
     }
 
@@ -174,8 +192,9 @@ void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
             }
             u.init(zz);
 
-            const long double llg = decoder.calc_likelihood(i,   z[i], u, y);
-            const long double llb = decoder.calc_likelihood(i, 1-z[i], u, y);
+            const auto& ll = decoder.calc_likelihood(i, u, y);
+            const long double llg = ll[z[i]];
+            const long double llb = ll[z[i] ^ 1];
             const long double sum = llg + llb;
 
             long double c = 0.0;
@@ -188,7 +207,17 @@ void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
 
             {
                 std::lock_guard<std::mutex> lock(mtx);
-                sum_capacities_[i].second += c;
+                sum_capacities_[i] += c;
+
+                if (z[i] == 0) {
+                    if (ll[0] < ll[1]) {
+                        error_bit_counts_[i]++;
+                    }
+                } else {
+                    if (ll[1] <= ll[0]) {
+                        error_bit_counts_[i]++;
+                    }
+                }
             }
         }
     }, num_threads);
@@ -198,8 +227,6 @@ void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
 
 void FrozeBitAnalyzer::analyze()
 {
-    std::vector<int> prev_frozen_bits(code_length_, 0);
-
     std::cout << "simulations, hamming distance" << std::endl;
 
     while (simulation_count_ < num_simulation_) {
@@ -207,14 +234,14 @@ void FrozeBitAnalyzer::analyze()
 
         const auto& capacities = calc_capacity(sum_capacities_, simulation_count_);
         auto current_frozen_bits = make_frozen_bits(capacities, info_length_);
-        size_t d = calc_hamming_distance(prev_frozen_bits, current_frozen_bits);
+        size_t d = calc_hamming_distance(prev_frozen_bits_, current_frozen_bits);
 
         std::cout << std::setw(utl::num_digits(num_simulation_)) << std::right << simulation_count_
             << ", "
             << std::setw(utl::num_digits(code_length_)) << std::right << d
             << std::endl;
 
-        std::swap(prev_frozen_bits, current_frozen_bits);
+        std::swap(prev_frozen_bits_, current_frozen_bits);
 
         save_capacity(code_length_, simulation_count_, channel_.params(), decoder_params_, capacities);
     }
@@ -222,24 +249,87 @@ void FrozeBitAnalyzer::analyze()
 
 void FrozeBitAnalyzer::parallel_analyze(const size_t num_threads)
 {
-    std::vector<int> prev_frozen_bits(code_length_, 0);
+    if (read_cache()) {
+        std::cout << "find cache file: " << cache_filename_ << std::endl;
+    }
 
-    std::cout << "simulations, hamming distance" << std::endl;
+    std::cout << "simulations, hamming distance, bec, bler, ber" << std::endl;
 
     while (simulation_count_ < num_simulation_) {
         parallel_step(num_threads);
 
         const auto& capacities = calc_capacity(sum_capacities_, simulation_count_);
         auto current_frozen_bits = make_frozen_bits(capacities, info_length_);
-        size_t d = calc_hamming_distance(prev_frozen_bits, current_frozen_bits);
+        size_t d = calc_hamming_distance(prev_frozen_bits_, current_frozen_bits);
+
+        size_t num_error_bits = 0;
+        for (size_t i = 0; i < code_length_; ++i) {
+            // 情報ビットのエラービット数を計算
+            if (!current_frozen_bits[i]) {
+                num_error_bits += error_bit_counts_[i];
+            }
+        }
+
+        const double bler = std::min(1.0, static_cast<double>(num_error_bits) / simulation_count_);
+        const double ber  = static_cast<double>(num_error_bits) / (code_length_ * simulation_count_);
 
         std::cout << std::setw(utl::num_digits(num_simulation_)) << std::right << simulation_count_
-            << ", "
-            << std::setw(utl::num_digits(code_length_)) << std::right << d
+            << ", " << std::setw(utl::num_digits(code_length_)) << std::right << d
+            << ", " << std::setw(utl::num_digits(num_simulation_*code_length_)) << std::right << num_error_bits
+            << std::scientific << std::setprecision(4)
+            << ", " << bler
+            << ", " << ber
             << std::endl;
 
-        std::swap(prev_frozen_bits, current_frozen_bits);
+        std::swap(prev_frozen_bits_, current_frozen_bits);
 
         save_capacity(code_length_, simulation_count_, channel_.params(), decoder_params_, capacities);
+        write_cache();
     }
+}
+
+bool FrozeBitAnalyzer::read_cache()
+{
+    std::ifstream ifs(cache_filename_);
+    if (!ifs.is_open()) {
+        return false;
+    }
+
+    auto seed = estd::GetDefaultRandomEngine().seed();
+    auto generator_count = estd::GetDefaultRandomEngine().generate_count();
+    ifs.read(reinterpret_cast<char*>(&seed), sizeof(seed));
+    ifs.read(reinterpret_cast<char*>(&generator_count), sizeof(generator_count));
+    estd::GetDefaultRandomEngine().reseed(seed, generator_count);
+
+    ifs.read(reinterpret_cast<char*>(&simulation_count_), sizeof(simulation_count_));
+    ifs.read(reinterpret_cast<char*>(&sum_capacities_[0]), sizeof(sum_capacities_[0])*sum_capacities_.size());
+    ifs.read(reinterpret_cast<char*>(&error_bit_counts_[0]), sizeof(error_bit_counts_[0])*error_bit_counts_.size());
+    ifs.read(reinterpret_cast<char*>(&prev_frozen_bits_[0]), sizeof(prev_frozen_bits_[0])*prev_frozen_bits_.size());
+
+    ifs.close();
+
+    return true;
+}
+
+bool FrozeBitAnalyzer::write_cache()
+{
+    std::ofstream ofs(cache_filename_, std::ios::out | std::ios::binary);
+
+    if (!ofs.is_open()) {
+        return false;
+    }
+
+    auto seed = estd::GetDefaultRandomEngine().seed();
+    auto generator_count = estd::GetDefaultRandomEngine().generate_count();
+    ofs.write(reinterpret_cast<const char*>(&seed), sizeof(seed));
+    ofs.write(reinterpret_cast<const char*>(&generator_count), sizeof(generator_count));
+
+    ofs.write(reinterpret_cast<const char*>(&simulation_count_), sizeof(simulation_count_));
+    ofs.write(reinterpret_cast<const char*>(&sum_capacities_[0]), sizeof(sum_capacities_[0])*sum_capacities_.size());
+    ofs.write(reinterpret_cast<const char*>(&error_bit_counts_[0]), sizeof(error_bit_counts_[0])*error_bit_counts_.size());
+    ofs.write(reinterpret_cast<const char*>(&prev_frozen_bits_[0]), sizeof(prev_frozen_bits_[0])*prev_frozen_bits_.size());
+
+    ofs.close();
+
+    return true;
 }
