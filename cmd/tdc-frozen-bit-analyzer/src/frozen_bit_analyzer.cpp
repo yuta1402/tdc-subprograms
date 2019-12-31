@@ -97,6 +97,7 @@ namespace
            << "_v" << tdc_params.drift_stddev
            << "_md" << tdc_params.max_drift
            << "_seg" << decoder_params.num_segments
+           << "_seed" << estd::GetDefaultRandomEngine().seed()
            << ".dat";
 
         return ss.str();
