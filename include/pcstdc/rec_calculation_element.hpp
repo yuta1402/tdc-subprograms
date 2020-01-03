@@ -1,6 +1,8 @@
 #ifndef PCSTDC_REC_CALCULATION_ELEMENT_HPP
 #define PCSTDC_REC_CALCULATION_ELEMENT_HPP
 
+#include <array>
+
 /*!
 @namespace pcstdc
 @brief Polar Code Subprograms for Timing Drift Channel
@@ -14,7 +16,7 @@ namespace pcstdc
     struct RecCalculationElement
     {
         int prev_index{ -1 };
-        long double value{ -1.0 };
+        std::array<long double, 2> value{ -1.0, -1.0 };
     };
 }
 

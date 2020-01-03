@@ -8,6 +8,7 @@
 #include "channel/tdc.hpp"
 #include "tdcs/drift_transition_prob.hpp"
 #include "pcstdc/info_table_handler.hpp"
+#include "pcstdc/rec_calculation_element.hpp"
 
 /*!
 @namespace pcstdc
@@ -31,7 +32,7 @@ namespace pcstdc
     {
     public:
         using InfoTable = InfoTableHandler;
-        using RecCalculations = std::vector<std::vector<std::vector<estd::nivector<estd::nivector<std::array<long double, 2>>>>>>;
+        using RecCalculations = std::vector<std::vector<estd::nivector<estd::nivector<RecCalculationElement>>>>;
         using Level0Calculations = std::vector<estd::nivector<std::array<long double, 2>>>;
 
     public:
