@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
         m_hat = decoder.decode(y);
     }
 
-    Eigen::RowVectorXi raw_e = m + y;
+    Eigen::RowVectorXi raw_e = x + y;
     for (int i = 0; i < raw_e.size(); ++i) {
         raw_e[i] = raw_e[i] % 2;
     }
