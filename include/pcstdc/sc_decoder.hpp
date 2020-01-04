@@ -44,7 +44,7 @@ namespace pcstdc
         Eigen::RowVectorXi decode(const Eigen::RowVectorXi& z);
         std::array<long double, 2> calc_likelihood(const int i, InfoTable& u, const Eigen::RowVectorXi& z);
         std::array<long double, 2> calc_level0(const int a, const int da, const Eigen::RowVectorXi& z);
-        std::array<long double, 2> calc_level0_rec(const int a, const int da, const Eigen::RowVectorXi& z);
+        estd::nivector<std::array<long double, 2>> calc_level0_rec(const int a, const Eigen::RowVectorXi& z);
         estd::nivector<estd::nivector<std::array<long double, 2>>> calc_level1_rec(const int i, const int a, const int b, InfoTable& u, const Eigen::RowVectorXi& z);
         estd::nivector<estd::nivector<std::array<long double, 2>>> calc_likelihood_rec(const int i, const int k, const int a, const int b, InfoTable& u, const Eigen::RowVectorXi& z);
 

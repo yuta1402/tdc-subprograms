@@ -39,13 +39,19 @@ namespace pcstdc
             rec_calculations_[k].resize(pownk);
 
             for (size_t m = 0; m < pownk; ++m) {
-                rec_calculations_[k][m].value.assign(-max_segment_, max_segment_, estd::nivector<std::array<long double, 2>>(-max_segment_, max_segment_, { -1.0, -1.0 }));
+                rec_calculations_[k][m].value.assign(
+                    -max_segment_, max_segment_, estd::nivector<std::array<long double, 2>>(
+                        -max_segment_, max_segment_, { -1.0, -1.0 }
+                    )
+                );
             }
         }
 
         level0_calculations_.resize(params_.code_length);
         for (size_t i = 0; i < params_.code_length; ++i) {
-            level0_calculations_[i].assign(-max_segment_, max_segment_, { -1.0, -1.0 });
+            level0_calculations_[i].assign(
+                -max_segment_, max_segment_, { -1.0, -1.0 }
+            );
         }
     }
 
@@ -150,14 +156,21 @@ namespace pcstdc
         return p;
     }
 
-    std::array<long double, 2> SCDecoder::calc_level0_rec(const int a, const int da, const Eigen::RowVectorXi& z)
+    estd::nivector<std::array<long double, 2>> SCDecoder::calc_level0_rec(const int a, const Eigen::RowVectorXi& z)
     {
-        if (level0_calculations_[a][da][0] != -1.0) {
-            return level0_calculations_[a][da];
+        if (level0_calculations_[a][0][0] != -1.0) {
+            return level0_calculations_[a];
         }
 
-        const auto& r = calc_level0(a, da, z);
-        level0_calculations_[a][da] = r;
+        estd::nivector<std::array<long double, 2>> r(
+            -max_segment_, max_segment_, { 0.0, 0.0 }
+        );
+
+        for (int da = -max_segment_; da <= max_segment_; ++da) {
+            r[da] = calc_level0(a, da, z);
+        }
+
+        level0_calculations_[a] = r;
         return r;
     }
 
@@ -172,18 +185,18 @@ namespace pcstdc
             )
         );
 
-        for (const auto& [da, db, dtp] : drift_transition_prob_.not_zero_range()) {
-            const auto& wb = calc_level0_rec(a, da, z);
-            const auto& wg = calc_level0_rec(g, db, z);
+        const auto& wb = calc_level0_rec(a, z);
+        const auto& wg = calc_level0_rec(g, z);
 
+        for (const auto& [da, db, dtp] : drift_transition_prob_.not_zero_range()) {
             if (i & 1) {
                 // odd-index
-                r[da][db][0] = wb[u[1][a]]   * wg[0] * drift_transition_prob_(db, da);
-                r[da][db][1] = wb[u[1][a]^1] * wg[1] * drift_transition_prob_(db, da);
+                r[da][db][0] = wb[da][u[1][a]]   * wg[db][0] * drift_transition_prob_(db, da);
+                r[da][db][1] = wb[da][u[1][a]^1] * wg[db][1] * drift_transition_prob_(db, da);
             } else {
                 // even-index
-                r[da][db][0] = (wb[0] * wg[0] + wb[1] * wg[1]) * drift_transition_prob_(db, da);
-                r[da][db][1] = (wb[1] * wg[0] + wb[0] * wg[1]) * drift_transition_prob_(db, da);
+                r[da][db][0] = (wb[da][0] * wg[db][0] + wb[da][1] * wg[db][1]) * drift_transition_prob_(db, da);
+                r[da][db][1] = (wb[da][1] * wg[db][0] + wb[da][0] * wg[db][1]) * drift_transition_prob_(db, da);
             }
         }
 
