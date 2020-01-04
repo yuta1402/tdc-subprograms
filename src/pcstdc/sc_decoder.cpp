@@ -192,12 +192,6 @@ namespace pcstdc
 
     estd::nivector<estd::nivector<std::array<long double, 2>>> SCDecoder::calc_likelihood_rec(const int i, const int k, const int a, const int b, InfoTable& u, const Eigen::RowVectorXi& z)
     {
-        // daとdbの差による刈り込み
-        // const int max_num_transitions = drift_transition_prob_.max_num_transitions();
-        // if (abs(db-da) > max_num_transitions * (1 << k)) {
-        //     return { 0.0, 0.0 };
-        // }
-
         // m = a / 2^k
         const int m = (a >> k);
 
@@ -231,6 +225,14 @@ namespace pcstdc
 
         for (int da = -max_segment_; da <= max_segment_; ++da) {
             for (int db = -max_segment_; db <= max_segment_; ++db) {
+                // daとdbの差による刈り込み
+                const int max_num_transitions = drift_transition_prob_.max_num_transitions();
+                if (abs(db-da) > max_num_transitions * (1 << k)) {
+                    r[da][db][0] = 0.0;
+                    r[da][db][1] = 0.0;
+                    continue;
+                }
+
                 // dg0: d_{g-1}, dg1: d_{g}
                 for (const auto& [dg0, dg1, dtp] : drift_transition_prob_.not_zero_range()) {
                     // const auto& wb = calc_likelihood_rec(j, k-1, a, g, da, dg0, u, z);
