@@ -97,7 +97,6 @@ namespace
            << "_v" << tdc_params.drift_stddev
            << "_md" << tdc_params.max_drift
            << "_seg" << decoder_params.num_segments
-           << "_seed" << estd::GetDefaultRandomEngine().seed()
            << ".dat";
 
         return ss.str();
@@ -296,12 +295,6 @@ bool FrozeBitAnalyzer::read_cache()
         return false;
     }
 
-    auto seed = estd::GetDefaultRandomEngine().seed();
-    auto generator_count = estd::GetDefaultRandomEngine().generate_count();
-    ifs.read(reinterpret_cast<char*>(&seed), sizeof(seed));
-    ifs.read(reinterpret_cast<char*>(&generator_count), sizeof(generator_count));
-    estd::GetDefaultRandomEngine().reseed(seed, generator_count);
-
     ifs.read(reinterpret_cast<char*>(&simulation_count_), sizeof(simulation_count_));
     ifs.read(reinterpret_cast<char*>(&sum_capacities_[0]), sizeof(sum_capacities_[0])*sum_capacities_.size());
     ifs.read(reinterpret_cast<char*>(&error_bit_counts_[0]), sizeof(error_bit_counts_[0])*error_bit_counts_.size());
@@ -319,11 +312,6 @@ bool FrozeBitAnalyzer::write_cache()
     if (!ofs.is_open()) {
         return false;
     }
-
-    auto seed = estd::GetDefaultRandomEngine().seed();
-    auto generator_count = estd::GetDefaultRandomEngine().generate_count();
-    ofs.write(reinterpret_cast<const char*>(&seed), sizeof(seed));
-    ofs.write(reinterpret_cast<const char*>(&generator_count), sizeof(generator_count));
 
     ofs.write(reinterpret_cast<const char*>(&simulation_count_), sizeof(simulation_count_));
     ofs.write(reinterpret_cast<const char*>(&sum_capacities_[0]), sizeof(sum_capacities_[0])*sum_capacities_.size());
