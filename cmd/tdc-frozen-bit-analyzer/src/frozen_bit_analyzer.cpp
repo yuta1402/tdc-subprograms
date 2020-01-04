@@ -104,6 +104,7 @@ namespace
            << "_v" << tdc_params.drift_stddev
            << "_md" << tdc_params.max_drift
            << "_seg" << decoder_params.num_segments
+           << "_seed" << estd::GetDefaultRandomEngine().seed()
            << ".dat";
 
         return ss.str();
@@ -304,14 +305,8 @@ void FrozeBitAnalyzer::parallel_analyze(const size_t num_threads)
 
         std::swap(prev_frozen_bits_, current_frozen_bits);
 
-        {
-            estd::measure_time t("save_capacity");
-            save_capacity(code_length_, simulation_count_, channel_.params(), decoder_params_, capacities);
-        }
-        {
-            estd::measure_time t("write_cache");
-            write_cache();
-        }
+        save_capacity(code_length_, simulation_count_, channel_.params(), decoder_params_, capacities);
+        write_cache();
     }
 }
 
@@ -321,6 +316,12 @@ bool FrozeBitAnalyzer::read_cache()
     if (!ifs.is_open()) {
         return false;
     }
+
+    estd::detail::DefaultRandomEngine::result_type seed;
+    size_t generator_count;
+    ifs >> seed;
+    ifs >> generator_count;
+    estd::GetDefaultRandomEngine().reseed(seed, generator_count);
 
     ifs >> simulation_count_;
 
@@ -348,6 +349,11 @@ bool FrozeBitAnalyzer::write_cache()
     if (!ofs.is_open()) {
         return false;
     }
+
+    auto seed = estd::GetDefaultRandomEngine().seed();
+    auto generator_count = estd::GetDefaultRandomEngine().generate_count();
+    ofs << seed << '\n';
+    ofs << generator_count << '\n';
 
     ofs << simulation_count_ << '\n';
 
