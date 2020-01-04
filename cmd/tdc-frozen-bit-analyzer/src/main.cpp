@@ -75,6 +75,7 @@ int main(int argc, char* argv[])
               << "    max drift: " << max_drift << '\n'
               << "    num segments: " << num_segments << '\n'
               << "simulation parameters:\n"
+              << "    seed: " << seed << '\n'
               << "    num threads: " << num_threads << '\n'
               << "    num epochs: " << num_epochs << '\n'
               << "    num simulations (frozen bit): " << num_frozen_bit_simulations << '\n'
