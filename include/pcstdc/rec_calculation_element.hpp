@@ -2,6 +2,7 @@
 #define PCSTDC_REC_CALCULATION_ELEMENT_HPP
 
 #include <array>
+#include "estd/negative_index_vector.hpp"
 
 /*!
 @namespace pcstdc
@@ -16,7 +17,7 @@ namespace pcstdc
     struct RecCalculationElement
     {
         int prev_index{ -1 };
-        std::array<long double, 2> value{ -1.0, -1.0 };
+        estd::nivector<estd::nivector<std::array<long double, 2>>> value;
     };
 }
 

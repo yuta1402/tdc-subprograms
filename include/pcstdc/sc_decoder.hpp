@@ -32,7 +32,7 @@ namespace pcstdc
     {
     public:
         using InfoTable = InfoTableHandler;
-        using RecCalculations = std::vector<std::vector<estd::nivector<estd::nivector<RecCalculationElement>>>>;
+        using RecCalculations = std::vector<std::vector<RecCalculationElement>>;
         using Level0Calculations = std::vector<estd::nivector<std::array<long double, 2>>>;
 
     public:
@@ -45,8 +45,8 @@ namespace pcstdc
         std::array<long double, 2> calc_likelihood(const int i, InfoTable& u, const Eigen::RowVectorXi& z);
         std::array<long double, 2> calc_level0(const int a, const int da, const Eigen::RowVectorXi& z);
         std::array<long double, 2> calc_level0_rec(const int a, const int da, const Eigen::RowVectorXi& z);
-        std::array<long double, 2> calc_level1_rec(const int i, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z);
-        std::array<long double, 2> calc_likelihood_rec(const int i, const int k, const int a, const int b, const int da, const int db, InfoTable& u, const Eigen::RowVectorXi& z);
+        estd::nivector<estd::nivector<std::array<long double, 2>>> calc_level1_rec(const int i, const int a, const int b, InfoTable& u, const Eigen::RowVectorXi& z);
+        estd::nivector<estd::nivector<std::array<long double, 2>>> calc_likelihood_rec(const int i, const int k, const int a, const int b, InfoTable& u, const Eigen::RowVectorXi& z);
 
     private:
         SCDecoderParams params_;
