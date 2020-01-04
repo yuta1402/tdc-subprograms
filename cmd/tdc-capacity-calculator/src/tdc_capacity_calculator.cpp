@@ -49,15 +49,9 @@ namespace
         for (size_t k = 1; k < code_length; ++k) {
             double sum = 0.0;
 
-            for (int dk = -max_segment; dk <= max_segment; ++dk) {
-                for (int dj = -max_segment; dj <= max_segment; ++dj) {
-                    if (dtp(dk, dj) == 0) {
-                        continue;
-                    }
-
-                    mu[k][dk] += mu[k-1][dj] * dtp(dk, dj) * upwards[k-1][dj];
-                }
-                sum += mu[k][dk];
+            for (const auto& [dj, dk, dp] : dtp.not_zero_range()) {
+                sum += mu[k-1][dj] * dp * upwards[k-1][dj];
+                mu[k][dk] += mu[k-1][dj] * dp * upwards[k-1][dj];
             }
 
             // normalization
