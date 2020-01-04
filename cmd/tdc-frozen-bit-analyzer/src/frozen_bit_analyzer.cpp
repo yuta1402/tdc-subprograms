@@ -7,6 +7,8 @@
 #include "pcstdc/sc_decoder.hpp"
 #include "utl/utility.hpp"
 
+#include "estd/measure_time.hpp"
+
 namespace
 {
     std::string generate_filename(const size_t n, const size_t num_simulation, const channel::TDCParams& tdc_params, const pcstdc::SCDecoderParams& decoder_params)
@@ -38,8 +40,10 @@ namespace
         for(const auto& [ j, c ] : capacities) {
             ofs << std::setfill('0') << std::right << std::setw(utl::num_digits(n)) << j;
             ofs << ' ';
-            ofs << std::scientific << std::setprecision(16) << c << std::endl;
+            ofs << std::scientific << std::setprecision(16) << c << '\n';
         }
+
+        ofs << std::flush;
 
         ofs.close();
 
@@ -300,8 +304,14 @@ void FrozeBitAnalyzer::parallel_analyze(const size_t num_threads)
 
         std::swap(prev_frozen_bits_, current_frozen_bits);
 
-        save_capacity(code_length_, simulation_count_, channel_.params(), decoder_params_, capacities);
-        write_cache();
+        {
+            estd::measure_time t("save_capacity");
+            save_capacity(code_length_, simulation_count_, channel_.params(), decoder_params_, capacities);
+        }
+        {
+            estd::measure_time t("write_cache");
+            write_cache();
+        }
     }
 }
 
@@ -312,10 +322,19 @@ bool FrozeBitAnalyzer::read_cache()
         return false;
     }
 
-    ifs.read(reinterpret_cast<char*>(&simulation_count_), sizeof(simulation_count_));
-    ifs.read(reinterpret_cast<char*>(&average_capacities_[0]), sizeof(average_capacities_[0])*average_capacities_.size());
-    ifs.read(reinterpret_cast<char*>(&error_bit_counts_[0]), sizeof(error_bit_counts_[0])*error_bit_counts_.size());
-    ifs.read(reinterpret_cast<char*>(&prev_frozen_bits_[0]), sizeof(prev_frozen_bits_[0])*prev_frozen_bits_.size());
+    ifs >> simulation_count_;
+
+    for (auto&& c: average_capacities_) {
+        ifs >> c;
+    }
+
+    for (auto&& e: error_bit_counts_) {
+        ifs >> e;
+    }
+
+    for (auto&& f: prev_frozen_bits_) {
+        ifs >> f;
+    }
 
     ifs.close();
 
@@ -324,16 +343,27 @@ bool FrozeBitAnalyzer::read_cache()
 
 bool FrozeBitAnalyzer::write_cache()
 {
-    std::ofstream ofs(cache_filename_, std::ios::out | std::ios::binary);
+    std::ofstream ofs(cache_filename_, std::ios::out);
 
     if (!ofs.is_open()) {
         return false;
     }
 
-    ofs.write(reinterpret_cast<const char*>(&simulation_count_), sizeof(simulation_count_));
-    ofs.write(reinterpret_cast<const char*>(&average_capacities_[0]), sizeof(average_capacities_[0])*average_capacities_.size());
-    ofs.write(reinterpret_cast<const char*>(&error_bit_counts_[0]), sizeof(error_bit_counts_[0])*error_bit_counts_.size());
-    ofs.write(reinterpret_cast<const char*>(&prev_frozen_bits_[0]), sizeof(prev_frozen_bits_[0])*prev_frozen_bits_.size());
+    ofs << simulation_count_ << '\n';
+
+    for (const auto& c: average_capacities_) {
+        ofs << std::scientific << std::setprecision(16) << c << '\n';
+    }
+
+    for (const auto& e: error_bit_counts_) {
+        ofs << e << '\n';
+    }
+
+    for (const auto& f: prev_frozen_bits_) {
+        ofs << f << '\n';
+    }
+
+    ofs << std::flush;
 
     ofs.close();
 
