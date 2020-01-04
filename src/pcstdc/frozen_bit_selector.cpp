@@ -120,10 +120,10 @@ namespace pcstdc
 
                 const auto& ll = decoder.calc_likelihood(i, u, y);
 
-                const long double llg = ll[z[i]];
-                const long double llb = ll[z[i] ^ 1];
+                const double llg = ll[z[i]];
+                const double llb = ll[z[i] ^ 1];
 
-                const long double sum = llg + llb;
+                const double sum = llg + llb;
 
                 double c = 0.0;
 
@@ -180,10 +180,10 @@ namespace pcstdc
 
                 const auto& ll = decoder.calc_likelihood(i, u, y);
 
-                const long double llg = ll[z[i]];
-                const long double llb = ll[z[i] ^ 1];
+                const double llg = ll[z[i]];
+                const double llb = ll[z[i] ^ 1];
 
-                const long double sum = llg + llb;
+                const double sum = llg + llb;
 
                 double c = 0.0;
 

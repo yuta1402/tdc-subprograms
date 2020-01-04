@@ -34,7 +34,7 @@ private:
     const pcstdc::SCDecoderParams& decoder_params_;
 
     size_t simulation_count_;
-    std::vector<long double> sum_capacities_;
+    std::vector<double> average_capacities_;
     std::vector<size_t> error_bit_counts_;
     std::vector<int> prev_frozen_bits_;
 

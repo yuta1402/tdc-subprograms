@@ -23,10 +23,10 @@ namespace
     {
     public:
         int ui;
-        long double likelihood;
+        double likelihood;
         PathWrap path_wrap;
 
-        PathLikelihoodWrap(const int ui_, const long double likelihood_, const PathWrap& path_wrap_) :
+        PathLikelihoodWrap(const int ui_, const double likelihood_, const PathWrap& path_wrap_) :
             ui{ ui_ },
             likelihood{ likelihood_ },
             path_wrap{ path_wrap_ }
