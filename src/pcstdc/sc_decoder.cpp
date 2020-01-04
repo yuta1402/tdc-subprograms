@@ -188,6 +188,9 @@ namespace pcstdc
             )
         );
 
+        // normalization factor
+        long double c = 0.0;
+
         for (const auto& [da, db, dtp] : drift_transition_prob_.not_zero_range()) {
             if (i & 1) {
                 // odd-index
@@ -197,6 +200,19 @@ namespace pcstdc
                 // even-index
                 r[da][db][0] = (wb[da][0] * wg[db][0] + wb[da][1] * wg[db][1]) * drift_transition_prob_(db, da);
                 r[da][db][1] = (wb[da][1] * wg[db][0] + wb[da][0] * wg[db][1]) * drift_transition_prob_(db, da);
+            }
+
+            c += r[da][db][0];
+            c += r[da][db][1];
+        }
+
+        // normalization
+        if (c != 0.0) {
+            for (int da = -max_segment_; da <= max_segment_; ++da) {
+                for (int db = -max_segment_; db <= max_segment_; ++db) {
+                    r[da][db][0] /= c;
+                    r[da][db][1] /= c;
+                }
             }
         }
 
@@ -236,6 +252,9 @@ namespace pcstdc
             )
         );
 
+        // normalization factor
+        long double c = 0.0;
+
         for (int da = -max_segment_; da <= max_segment_; ++da) {
             for (int db = -max_segment_; db <= max_segment_; ++db) {
                 // daとdbの差による刈り込み
@@ -261,9 +280,22 @@ namespace pcstdc
                         r[da][db][1] += (wb[da][dg0][1] * wg[dg1][db][0] + wb[da][dg0][0] * wg[dg1][db][1]) * dtp;
                     }
                 }
+
+                c += r[da][db][0];
+                c += r[da][db][1];
             }
         }
         // r *= 0.5;
+
+        // normalization
+        if (c != 0.0) {
+            for (int da = -max_segment_; da <= max_segment_; ++da) {
+                for (int db = -max_segment_; db <= max_segment_; ++db) {
+                    r[da][db][0] /= c;
+                    r[da][db][1] /= c;
+                }
+            }
+        }
 
         rec_calculations_[k][m].prev_index = i;
         rec_calculations_[k][m].value = r;
