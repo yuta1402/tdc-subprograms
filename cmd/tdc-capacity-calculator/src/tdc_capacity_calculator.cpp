@@ -51,6 +51,10 @@ namespace
 
             for (int dk = -max_segment; dk <= max_segment; ++dk) {
                 for (int dj = -max_segment; dj <= max_segment; ++dj) {
+                    if (dtp(dk, dj) == 0) {
+                        continue;
+                    }
+
                     mu[k][dk] += mu[k-1][dj] * dtp(dk, dj) * upwards[k-1][dj];
                 }
                 sum += mu[k][dk];
