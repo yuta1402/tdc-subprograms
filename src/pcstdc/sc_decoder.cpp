@@ -179,14 +179,14 @@ namespace pcstdc
         // g = (a + b) / 2
         const int g = ((a + b) >> 1);
 
+        const auto& wb = calc_level0_rec(a, z);
+        const auto& wg = calc_level0_rec(g, z);
+
         estd::nivector<estd::nivector<std::array<long double, 2>>> r(
             -max_segment_, max_segment_, estd::nivector<std::array<long double, 2>>(
                 -max_segment_, max_segment_, { 0.0, 0.0 }
             )
         );
-
-        const auto& wb = calc_level0_rec(a, z);
-        const auto& wg = calc_level0_rec(g, z);
 
         for (const auto& [da, db, dtp] : drift_transition_prob_.not_zero_range()) {
             if (i & 1) {
@@ -227,14 +227,14 @@ namespace pcstdc
         // g = (a + b) / 2
         const int g = ((a + b) >> 1);
 
+        const auto& wb = calc_likelihood_rec(j, k-1, a, g, u, z);
+        const auto& wg = calc_likelihood_rec(j, k-1, g, b, u, z);
+
         estd::nivector<estd::nivector<std::array<long double, 2>>> r(
             -max_segment_, max_segment_, estd::nivector<std::array<long double, 2>>(
                 -max_segment_, max_segment_, { 0.0, 0.0 }
             )
         );
-
-        const auto& wb = calc_likelihood_rec(j, k-1, a, g, u, z);
-        const auto& wg = calc_likelihood_rec(j, k-1, g, b, u, z);
 
         for (int da = -max_segment_; da <= max_segment_; ++da) {
             for (int db = -max_segment_; db <= max_segment_; ++db) {
