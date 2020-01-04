@@ -26,7 +26,7 @@ namespace
         return ss.str();
     }
 
-    bool save_capacity(const size_t n, const size_t num_simulation, const channel::TDCParams& tdc_params, const pcstdc::SCDecoderParams& decoder_params, const std::vector<std::pair<size_t, long double>>& capacities)
+    bool save_capacity(const size_t n, const size_t num_simulation, const channel::TDCParams& tdc_params, const pcstdc::SCDecoderParams& decoder_params, const std::vector<std::pair<size_t, double>>& capacities)
     {
         const std::string filename = generate_filename(n, num_simulation, tdc_params, decoder_params);
         std::ofstream ofs(filename, std::ios::out);
@@ -46,9 +46,9 @@ namespace
         return true;
     }
 
-    std::vector<std::pair<size_t, long double>> calc_capacity(const std::vector<long double>& sum_capacities, const size_t num_simulation)
+    std::vector<std::pair<size_t, double>> calc_capacity(const std::vector<double>& sum_capacities, const size_t num_simulation)
     {
-        std::vector<std::pair<size_t, long double>> capacities(sum_capacities.size());
+        std::vector<std::pair<size_t, double>> capacities(sum_capacities.size());
 
         for (size_t i = 0; i < capacities.size(); ++i) {
             capacities[i].first = i;
@@ -62,7 +62,7 @@ namespace
         return capacities;
     }
 
-    std::vector<int> make_frozen_bits(const std::vector<std::pair<size_t, long double>>& capacities, const size_t info_length)
+    std::vector<int> make_frozen_bits(const std::vector<std::pair<size_t, double>>& capacities, const size_t info_length)
     {
         const size_t code_length = capacities.size();
 
@@ -146,16 +146,16 @@ void FrozeBitAnalyzer::step()
             u.init(zz);
 
             const auto& ll = decoder.calc_likelihood(i, u, y);
-            const long double llg = ll[z[i]];
-            const long double llb = ll[z[i] ^ 1];
-            const long double sum = llg + llb;
+            const double llg = ll[z[i]];
+            const double llb = ll[z[i] ^ 1];
+            const double sum = llg + llb;
 
-            long double c = 0.0;
+            double c = 0.0;
 
             if (llg != 0.0 && sum != 0.0) {
                 // 式変形: c = std::log2(llg/(0.5*llg+0.5*llb));
                 c = 1.0 + std::log2(llg) - std::log2(sum);
-                c = std::clamp(c, 0.0l, 1.0l);
+                c = std::clamp(c, 0.0, 1.0);
             }
 
             sum_capacities_[i] += c;
@@ -194,16 +194,16 @@ void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
             u.init(zz);
 
             const auto& ll = decoder.calc_likelihood(i, u, y);
-            const long double llg = ll[z[i]];
-            const long double llb = ll[z[i] ^ 1];
-            const long double sum = llg + llb;
+            const double llg = ll[z[i]];
+            const double llb = ll[z[i] ^ 1];
+            const double sum = llg + llb;
 
-            long double c = 0.0;
+            double c = 0.0;
 
             if (llg != 0.0 && sum != 0.0) {
                 // 式変形: c = std::log2(llg/(0.5*llg+0.5*llb));
                 c = 1.0 + std::log2(llg) - std::log2(sum);
-                c = std::clamp(c, 0.0l, 1.0l);
+                c = std::clamp(c, 0.0, 1.0);
             }
 
             {

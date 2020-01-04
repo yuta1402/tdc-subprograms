@@ -17,7 +17,7 @@ namespace pcstdc
     struct RecCalculationElement
     {
         int prev_index{ -1 };
-        estd::nivector<estd::nivector<std::array<long double, 2>>> value;
+        estd::nivector<estd::nivector<std::array<double, 2>>> value;
     };
 }
 

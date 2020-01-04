@@ -40,7 +40,7 @@ namespace pcstdc
 
             for (size_t m = 0; m < pownk; ++m) {
                 rec_calculations_[k][m].value.assign(
-                    -max_segment_, max_segment_, estd::nivector<std::array<long double, 2>>(
+                    -max_segment_, max_segment_, estd::nivector<std::array<double, 2>>(
                         -max_segment_, max_segment_, { -1.0, -1.0 }
                     )
                 );
@@ -63,7 +63,7 @@ namespace pcstdc
             const size_t pownk = (1 << (n-k));
             for (size_t m = 0; m < pownk; ++m) {
                 rec_calculations_[k][m].prev_index = -1;
-                rec_calculations_[k][m].value.fill(estd::nivector<std::array<long double, 2>>(-max_segment_, max_segment_, { -1.0, -1.0 }));
+                rec_calculations_[k][m].value.fill(estd::nivector<std::array<double, 2>>(-max_segment_, max_segment_, { -1.0, -1.0 }));
             }
         }
 
@@ -111,13 +111,13 @@ namespace pcstdc
         return m;
     }
 
-    std::array<long double, 2> SCDecoder::calc_likelihood(const int i, InfoTable& u, const Eigen::RowVectorXi& z)
+    std::array<double, 2> SCDecoder::calc_likelihood(const int i, InfoTable& u, const Eigen::RowVectorXi& z)
     {
         const size_t n = exponent_code_length_;
 
         const auto& w = calc_likelihood_rec(i, n, 0, params_.code_length, u, z);
 
-        std::array<long double, 2> ll{ 0.0, 0.0 };
+        std::array<double, 2> ll{ 0.0, 0.0 };
         for (int dn = -max_segment_; dn <= max_segment_; ++dn) {
             ll[0] += w[0][dn][0];
             ll[1] += w[0][dn][1];
@@ -126,7 +126,7 @@ namespace pcstdc
         return ll;
     }
 
-    std::array<long double, 2> SCDecoder::calc_level0(const int a, const int da, const Eigen::RowVectorXi& z)
+    std::array<double, 2> SCDecoder::calc_level0(const int a, const int da, const Eigen::RowVectorXi& z)
     {
         const double real_da = static_cast<double>(da) / params_.num_segments;
         const int rounded_da = std::floor(real_da + 0.5);
@@ -143,7 +143,7 @@ namespace pcstdc
             return { 0.5, 0.5 };
         }
 
-        std::array<long double, 2> p;
+        std::array<double, 2> p;
 
         if (z[j] == 0) {
             p[0] = 1.0 - tdc_.params().ps;
@@ -156,13 +156,13 @@ namespace pcstdc
         return p;
     }
 
-    estd::nivector<std::array<long double, 2>> SCDecoder::calc_level0_rec(const int a, const Eigen::RowVectorXi& z)
+    estd::nivector<std::array<double, 2>> SCDecoder::calc_level0_rec(const int a, const Eigen::RowVectorXi& z)
     {
         if (level0_calculations_[a][0][0] != -1.0) {
             return level0_calculations_[a];
         }
 
-        estd::nivector<std::array<long double, 2>> r(
+        estd::nivector<std::array<double, 2>> r(
             -max_segment_, max_segment_, { 0.0, 0.0 }
         );
 
@@ -174,7 +174,7 @@ namespace pcstdc
         return r;
     }
 
-    estd::nivector<estd::nivector<std::array<long double, 2>>> SCDecoder::calc_level1_rec(const int i, const int a, const int b, InfoTable& u, const Eigen::RowVectorXi& z)
+    estd::nivector<estd::nivector<std::array<double, 2>>> SCDecoder::calc_level1_rec(const int i, const int a, const int b, InfoTable& u, const Eigen::RowVectorXi& z)
     {
         // g = (a + b) / 2
         const int g = ((a + b) >> 1);
@@ -182,14 +182,14 @@ namespace pcstdc
         const auto& wb = calc_level0_rec(a, z);
         const auto& wg = calc_level0_rec(g, z);
 
-        estd::nivector<estd::nivector<std::array<long double, 2>>> r(
-            -max_segment_, max_segment_, estd::nivector<std::array<long double, 2>>(
+        estd::nivector<estd::nivector<std::array<double, 2>>> r(
+            -max_segment_, max_segment_, estd::nivector<std::array<double, 2>>(
                 -max_segment_, max_segment_, { 0.0, 0.0 }
             )
         );
 
         // normalization factor
-        long double c = 0.0;
+        double c = 0.0;
 
         for (const auto& [da, db, dtp] : drift_transition_prob_.not_zero_range()) {
             if (i & 1) {
@@ -219,7 +219,7 @@ namespace pcstdc
         return r;
     }
 
-    estd::nivector<estd::nivector<std::array<long double, 2>>> SCDecoder::calc_likelihood_rec(const int i, const int k, const int a, const int b, InfoTable& u, const Eigen::RowVectorXi& z)
+    estd::nivector<estd::nivector<std::array<double, 2>>> SCDecoder::calc_likelihood_rec(const int i, const int k, const int a, const int b, InfoTable& u, const Eigen::RowVectorXi& z)
     {
         // m = a / 2^k
         const int m = (a >> k);
@@ -246,14 +246,14 @@ namespace pcstdc
         const auto& wb = calc_likelihood_rec(j, k-1, a, g, u, z);
         const auto& wg = calc_likelihood_rec(j, k-1, g, b, u, z);
 
-        estd::nivector<estd::nivector<std::array<long double, 2>>> r(
-            -max_segment_, max_segment_, estd::nivector<std::array<long double, 2>>(
+        estd::nivector<estd::nivector<std::array<double, 2>>> r(
+            -max_segment_, max_segment_, estd::nivector<std::array<double, 2>>(
                 -max_segment_, max_segment_, { 0.0, 0.0 }
             )
         );
 
         // normalization factor
-        long double c = 0.0;
+        double c = 0.0;
 
         for (int da = -max_segment_; da <= max_segment_; ++da) {
             for (int db = -max_segment_; db <= max_segment_; ++db) {
