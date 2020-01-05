@@ -123,6 +123,12 @@ namespace pcstdc
             ll[1] += w[0][dn][1];
         }
 
+        const double sum = ll[0] + ll[1];
+        if (sum != 0.0) {
+            ll[0] /= sum;
+            ll[1] /= sum;
+        }
+
         return ll;
     }
 
