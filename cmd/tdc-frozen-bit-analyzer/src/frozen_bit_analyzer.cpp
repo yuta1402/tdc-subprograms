@@ -7,6 +7,8 @@
 #include "pcstdc/sc_decoder.hpp"
 #include "utl/utility.hpp"
 
+#include "estd/measure_time.hpp"
+
 namespace
 {
     std::string generate_filename(const size_t n, const size_t num_simulation, const channel::TDCParams& tdc_params, const pcstdc::SCDecoderParams& decoder_params)
@@ -38,24 +40,29 @@ namespace
         for(const auto& [ j, c ] : capacities) {
             ofs << std::setfill('0') << std::right << std::setw(utl::num_digits(n)) << j;
             ofs << ' ';
-            ofs << std::scientific << std::setprecision(16) << c << std::endl;
+            ofs << std::scientific << std::setprecision(16) << c << '\n';
         }
+
+        ofs << std::flush;
 
         ofs.close();
 
         return true;
     }
 
-    std::vector<std::pair<size_t, long double>> calc_capacity(const std::vector<long double>& sum_capacities, const size_t num_simulation)
+    std::vector<std::pair<size_t, long double>> calc_capacity(const std::vector<long double>& average_capacities)
     {
-        std::vector<std::pair<size_t, long double>> capacities(sum_capacities.size());
+        std::vector<std::pair<size_t, long double>> capacities(average_capacities.size());
 
         for (size_t i = 0; i < capacities.size(); ++i) {
             capacities[i].first = i;
-            capacities[i].second = sum_capacities[i] / num_simulation;
+            capacities[i].second = average_capacities[i];
         }
 
         std::sort(begin(capacities), end(capacities), [](const auto& c1, const auto& c2){
+            if (c1.second == c2.second) {
+                return c1.first > c2.first;
+            }
             return c1.second > c2.second;
         });
 
@@ -112,7 +119,7 @@ FrozeBitAnalyzer::FrozeBitAnalyzer(const size_t code_length, const size_t info_l
     channel_{ channel },
     decoder_params_{ decoder_params },
     simulation_count_{ 0 },
-    sum_capacities_( code_length, 0.0 ),
+    average_capacities_( code_length, 0.0 ),
     error_bit_counts_( code_length_, 0 ),
     prev_frozen_bits_( code_length_, 0 ),
     cache_filename_{ generate_cache_filename(code_length, info_length, channel.params(), decoder_params) }
@@ -123,6 +130,8 @@ void FrozeBitAnalyzer::step()
 {
     const std::vector<int> tmp(code_length_, 0);
     const size_t epoch_simulations = std::min(num_epoch_, num_simulation_ - simulation_count_);
+
+    std::vector<long double> sum_capacities(code_length_, 0.0);
 
     for (size_t e = 0; e < epoch_simulations; ++e) {
         Eigen::RowVectorXi z = Eigen::RowVectorXi::Zero(code_length_);
@@ -158,8 +167,13 @@ void FrozeBitAnalyzer::step()
                 c = std::clamp(c, 0.0l, 1.0l);
             }
 
-            sum_capacities_[i] += c;
+            sum_capacities[i] += c;
         }
+    }
+
+    for (size_t i = 0; i < code_length_; ++i) {
+        const long double k = static_cast<long double>(simulation_count_) / (simulation_count_ + epoch_simulations);
+        average_capacities_[i] = (k * average_capacities_[i] + sum_capacities[i] / (simulation_count_ + epoch_simulations));
     }
 
     simulation_count_ += epoch_simulations;
@@ -170,9 +184,11 @@ void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
     const std::vector<int> tmp(code_length_, false);
     const size_t epoch_simulations = std::min(num_epoch_, num_simulation_ - simulation_count_);
 
+    std::vector<long double> sum_capacities(code_length_, 0.0);
+
     std::mutex mtx;
 
-    estd::parallel_for_with_reseed(epoch_simulations, [this, &tmp, &mtx](const auto& e){
+    estd::parallel_for_with_reseed(epoch_simulations, [this, &tmp, &sum_capacities, &mtx](const auto& e){
         Eigen::RowVectorXi z = Eigen::RowVectorXi::Zero(code_length_);
         for (size_t j = 0; j < code_length_; ++j) {
             z[j] = estd::Random(0, 1);
@@ -208,7 +224,7 @@ void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
 
             {
                 std::lock_guard<std::mutex> lock(mtx);
-                sum_capacities_[i] += c;
+                sum_capacities[i] += c;
 
                 if (z[i] == 0) {
                     if (ll[0] < ll[1]) {
@@ -223,6 +239,11 @@ void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
         }
     }, num_threads);
 
+    for (size_t i = 0; i < code_length_; ++i) {
+        const long double k = static_cast<long double>(simulation_count_) / (simulation_count_ + epoch_simulations);
+        average_capacities_[i] = (k * average_capacities_[i] + sum_capacities[i] / (simulation_count_ + epoch_simulations));
+    }
+
     simulation_count_ += epoch_simulations;
 }
 
@@ -233,7 +254,7 @@ void FrozeBitAnalyzer::analyze()
     while (simulation_count_ < num_simulation_) {
         step();
 
-        const auto& capacities = calc_capacity(sum_capacities_, simulation_count_);
+        const auto& capacities = calc_capacity(average_capacities_);
         auto current_frozen_bits = make_frozen_bits(capacities, info_length_);
         size_t d = calc_hamming_distance(prev_frozen_bits_, current_frozen_bits);
 
@@ -259,7 +280,7 @@ void FrozeBitAnalyzer::parallel_analyze(const size_t num_threads)
     while (simulation_count_ < num_simulation_) {
         parallel_step(num_threads);
 
-        const auto& capacities = calc_capacity(sum_capacities_, simulation_count_);
+        const auto& capacities = calc_capacity(average_capacities_);
         auto current_frozen_bits = make_frozen_bits(capacities, info_length_);
         size_t d = calc_hamming_distance(prev_frozen_bits_, current_frozen_bits);
 
@@ -271,8 +292,8 @@ void FrozeBitAnalyzer::parallel_analyze(const size_t num_threads)
             }
         }
 
-        const double bler = std::min(1.0, static_cast<double>(num_error_bits) / simulation_count_);
-        const double ber  = static_cast<double>(num_error_bits) / (code_length_ * simulation_count_);
+        const long double bler = std::min(1.0l, static_cast<long double>(num_error_bits) / simulation_count_);
+        const long double ber  = static_cast<long double>(num_error_bits) / (code_length_ * simulation_count_);
 
         std::cout << std::setw(utl::num_digits(num_simulation_)) << std::right << simulation_count_
             << ", " << std::setw(utl::num_digits(code_length_)) << std::right << d
@@ -296,16 +317,25 @@ bool FrozeBitAnalyzer::read_cache()
         return false;
     }
 
-    auto seed = estd::GetDefaultRandomEngine().seed();
-    auto generator_count = estd::GetDefaultRandomEngine().generate_count();
-    ifs.read(reinterpret_cast<char*>(&seed), sizeof(seed));
-    ifs.read(reinterpret_cast<char*>(&generator_count), sizeof(generator_count));
+    estd::detail::DefaultRandomEngine::result_type seed;
+    size_t generator_count;
+    ifs >> seed;
+    ifs >> generator_count;
     estd::GetDefaultRandomEngine().reseed(seed, generator_count);
 
-    ifs.read(reinterpret_cast<char*>(&simulation_count_), sizeof(simulation_count_));
-    ifs.read(reinterpret_cast<char*>(&sum_capacities_[0]), sizeof(sum_capacities_[0])*sum_capacities_.size());
-    ifs.read(reinterpret_cast<char*>(&error_bit_counts_[0]), sizeof(error_bit_counts_[0])*error_bit_counts_.size());
-    ifs.read(reinterpret_cast<char*>(&prev_frozen_bits_[0]), sizeof(prev_frozen_bits_[0])*prev_frozen_bits_.size());
+    ifs >> simulation_count_;
+
+    for (auto&& c: average_capacities_) {
+        ifs >> c;
+    }
+
+    for (auto&& e: error_bit_counts_) {
+        ifs >> e;
+    }
+
+    for (auto&& f: prev_frozen_bits_) {
+        ifs >> f;
+    }
 
     ifs.close();
 
@@ -314,7 +344,7 @@ bool FrozeBitAnalyzer::read_cache()
 
 bool FrozeBitAnalyzer::write_cache()
 {
-    std::ofstream ofs(cache_filename_, std::ios::out | std::ios::binary);
+    std::ofstream ofs(cache_filename_, std::ios::out);
 
     if (!ofs.is_open()) {
         return false;
@@ -322,13 +352,24 @@ bool FrozeBitAnalyzer::write_cache()
 
     auto seed = estd::GetDefaultRandomEngine().seed();
     auto generator_count = estd::GetDefaultRandomEngine().generate_count();
-    ofs.write(reinterpret_cast<const char*>(&seed), sizeof(seed));
-    ofs.write(reinterpret_cast<const char*>(&generator_count), sizeof(generator_count));
+    ofs << seed << '\n';
+    ofs << generator_count << '\n';
 
-    ofs.write(reinterpret_cast<const char*>(&simulation_count_), sizeof(simulation_count_));
-    ofs.write(reinterpret_cast<const char*>(&sum_capacities_[0]), sizeof(sum_capacities_[0])*sum_capacities_.size());
-    ofs.write(reinterpret_cast<const char*>(&error_bit_counts_[0]), sizeof(error_bit_counts_[0])*error_bit_counts_.size());
-    ofs.write(reinterpret_cast<const char*>(&prev_frozen_bits_[0]), sizeof(prev_frozen_bits_[0])*prev_frozen_bits_.size());
+    ofs << simulation_count_ << '\n';
+
+    for (const auto& c: average_capacities_) {
+        ofs << std::scientific << std::setprecision(16) << c << '\n';
+    }
+
+    for (const auto& e: error_bit_counts_) {
+        ofs << e << '\n';
+    }
+
+    for (const auto& f: prev_frozen_bits_) {
+        ofs << f << '\n';
+    }
+
+    ofs << std::flush;
 
     ofs.close();
 
