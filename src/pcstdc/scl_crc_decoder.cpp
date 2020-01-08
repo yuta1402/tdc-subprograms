@@ -81,6 +81,21 @@ namespace
 
         return m;
     }
+
+    inline std::vector<estd::nivector<estd::nivector<std::array<long double, 2>>>> generate_initial_value(const int max_segment, const int list_size)
+    {
+        const estd::nivector<estd::nivector<std::array<long double, 2>>> initial_value(
+            -max_segment, max_segment, estd::nivector<std::array<long double, 2>>(
+                -max_segment, max_segment, { 0.0, 0.0 }
+            )
+        );
+
+        std::vector<estd::nivector<estd::nivector<std::array<long double, 2>>>> r(
+            list_size, initial_value
+        );
+
+        return r;
+    }
 }
 
 namespace pcstdc
@@ -316,15 +331,7 @@ namespace pcstdc
         const auto& wb = calc_level0_rec(a, z);
         const auto& wg = calc_level0_rec(g, z);
 
-        const estd::nivector<estd::nivector<std::array<long double, 2>>> initial_value(
-            -max_segment_, max_segment_, estd::nivector<std::array<long double, 2>>(
-                -max_segment_, max_segment_, { 0.0, 0.0 }
-            )
-        );
-
-        std::vector<estd::nivector<estd::nivector<std::array<long double, 2>>>> r(
-            list_size_, initial_value
-        );
+        auto r = generate_initial_value(max_segment_, list_size_);
 
         for (size_t l = 0; l < list_size_; ++l) {
             for (const auto& [da, db, dtp] : drift_transition_prob_.not_zero_range()) {
@@ -370,15 +377,7 @@ namespace pcstdc
         const auto& wb = calc_likelihood_rec(j, k-1, a, g, u, z);
         const auto& wg = calc_likelihood_rec(j, k-1, g, b, u, z);
 
-        const estd::nivector<estd::nivector<std::array<long double, 2>>> initial_value(
-            -max_segment_, max_segment_, estd::nivector<std::array<long double, 2>>(
-                -max_segment_, max_segment_, { 0.0, 0.0 }
-            )
-        );
-
-        std::vector<estd::nivector<estd::nivector<std::array<long double, 2>>>> r(
-            list_size_, initial_value
-        );
+        auto r = generate_initial_value(max_segment_, list_size_);
 
         for (size_t l = 0; l < list_size_; ++l) {
             for (int da = -max_segment_; da <= max_segment_; ++da) {
