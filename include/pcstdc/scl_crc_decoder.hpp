@@ -56,6 +56,8 @@ namespace pcstdc
 
         const utl::CRCHandler crc_handler_;
         size_t list_size_;
+
+        std::vector<bool> actives_;
     };
 }
 

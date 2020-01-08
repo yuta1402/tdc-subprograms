@@ -106,7 +106,8 @@ namespace pcstdc
         rec_calculations_{},
         level0_calculations_{},
         crc_handler_{ crc_handler },
-        list_size_{ list_size }
+        list_size_{ list_size },
+        actives_(list_size_, false)
     {
         const size_t n = exponent_code_length_;
 
@@ -167,9 +168,9 @@ namespace pcstdc
 
         // std::vector<Eigen::RowVectorXi> paths(list_size_, Eigen::RowVectorXi::Zero(code_length));
         std::vector<InfoTable> u(list_size_, InfoTable(code_length));
-        std::vector<bool> actives(list_size_, false);
 
-        actives[0] = true;
+        std::fill(std::begin(actives_), std::end(actives_), false);
+        actives_[0] = true;
 
         std::vector<LikelihoodWrap> candidates;
 
@@ -186,7 +187,7 @@ namespace pcstdc
             const auto& ll = calc_likelihood(i, u, z);
 
             for (size_t l = 0; l < list_size_; ++l) {
-                if (actives[l]) {
+                if (actives_[l]) {
                     candidates.emplace_back(l, 0, ll[l][0]);
                     candidates.emplace_back(l, 1, ll[l][1]);
                 }
@@ -210,14 +211,14 @@ namespace pcstdc
                 }
             }
 
-            std::fill(std::begin(actives), std::end(actives), false);
+            std::fill(std::begin(actives_), std::end(actives_), false);
 
             for (auto&& c : candidates) {
-                if (actives[c.l]) {
+                if (actives_[c.l]) {
                     auto j = inactive_indices.front();
                     inactive_indices.pop();
 
-                    actives[j] = true;
+                    actives_[j] = true;
                     u[j] = u[c.l];
                     u[j].update(i, c.ui);
 
@@ -225,7 +226,7 @@ namespace pcstdc
                     continue;
                 }
 
-                actives[c.l] = true;
+                actives_[c.l] = true;
                 u[c.l].update(i, c.ui);
             }
         }
@@ -253,7 +254,9 @@ namespace pcstdc
 
         std::vector<std::array<long double, 2>> ll(list_size_, { 0.0, 0.0 });
         for (size_t l = 0; l < list_size_; ++l) {
-            // TODO: activeじゃないlは飛ばすべき
+            if (!actives_[l]) {
+                continue;
+            }
 
             const auto& w = rec_calculations_[l][n][0].value;
 
@@ -326,6 +329,10 @@ namespace pcstdc
         const auto& wg = calc_level0_rec(g, z);
 
         for (size_t l = 0; l < list_size_; ++l) {
+            if (!actives_[l]) {
+                continue;
+            }
+
             auto r = generate_initial_value(max_segment_);
 
             for (const auto& [da, db, dtp] : drift_transition_prob_.not_zero_range()) {
@@ -373,6 +380,10 @@ namespace pcstdc
         calc_likelihood_rec(j, k-1, g, b, u, z);
 
         for (size_t l = 0; l < list_size_; ++l) {
+            if (!actives_[l]) {
+                continue;
+            }
+
             const auto& wb = rec_calculations_[l][k-1][(a >> (k-1))].value;
             const auto& wg = rec_calculations_[l][k-1][(g >> (k-1))].value;
 
