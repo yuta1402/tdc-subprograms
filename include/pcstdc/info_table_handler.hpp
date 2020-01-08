@@ -28,6 +28,9 @@ namespace pcstdc
         reference operator[](const size_t i) { return u_[i]; }
         const_reference operator[](const size_t i) const { return u_[i]; }
 
+        const_reference codeword() const { return u_[0]; }
+        const_reference infoword() const { return u_[n_]; }
+
     private:
         size_t n_;
         size_t code_length_;

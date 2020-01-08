@@ -2,6 +2,7 @@
 #define PCSTDC_REC_CALCULATION_ELEMENT_HPP
 
 #include <array>
+#include <vector>
 #include "estd/negative_index_vector.hpp"
 
 /*!
