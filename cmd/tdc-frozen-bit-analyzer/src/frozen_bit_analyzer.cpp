@@ -122,17 +122,24 @@ FrozeBitAnalyzer::FrozeBitAnalyzer(const size_t code_length, const size_t info_l
     num_threads_{ num_threads },
     channel_{ channel },
     decoder_params_{ decoder_params },
+    encoders_{},
+    decoders_{},
     simulation_count_{ 0 },
     average_capacities_( code_length, 0.0 ),
     error_bit_counts_( code_length_, 0 ),
     prev_frozen_bits_( code_length_, 0 ),
     cache_filename_{ generate_cache_filename(code_length, info_length, channel.params(), decoder_params) }
 {
+    const std::vector<int> tmp(code_length_, false);
+    pcstdc::PolarEncoder encoder(code_length_, code_length_, tmp);
+    pcstdc::SCDecoder decoder(decoder_params_, channel_, tmp);
+
+    encoders_.resize(num_threads_, encoder);
+    decoders_.resize(num_threads_, decoder);
 }
 
 void FrozeBitAnalyzer::parallel_step()
 {
-    const std::vector<int> tmp(code_length_, false);
     const size_t epoch_simulations = std::min(num_epoch_, num_simulation_ - simulation_count_);
 
     std::vector<std::future<std::pair<std::vector<long double>, std::vector<size_t>>>> futures;
@@ -140,13 +147,13 @@ void FrozeBitAnalyzer::parallel_step()
     for (size_t t = 0; t < num_threads_; ++t) {
         auto seed = estd::Random();
 
-        futures.emplace_back(std::async(std::launch::async, [this, t, seed, epoch_simulations, &tmp](){
+        futures.emplace_back(std::async(std::launch::async, [this, t, seed, epoch_simulations](){
             estd::Reseed(seed);
 
             Eigen::RowVectorXi z = Eigen::RowVectorXi::Zero(code_length_);
 
-            pcstdc::PolarEncoder encoder(code_length_, code_length_, tmp);
-            pcstdc::SCDecoder decoder(decoder_params_, channel_, tmp);
+            auto&& encoder = encoders_[t];
+            auto&& decoder = decoders_[t];
 
             std::vector<long double> sum_capacities(code_length_, 0.0);
             std::vector<size_t> error_bit_counts(code_length_, 0);

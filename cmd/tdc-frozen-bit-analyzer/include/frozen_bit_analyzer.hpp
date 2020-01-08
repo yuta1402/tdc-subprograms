@@ -3,6 +3,7 @@
 
 #include <thread>
 #include "channel/tdc.hpp"
+#include "pcstdc/polar_encoder.hpp"
 #include "pcstdc/sc_decoder.hpp"
 
 class FrozeBitAnalyzer
@@ -30,6 +31,9 @@ private:
 
     const channel::TDC& channel_;
     const pcstdc::SCDecoderParams& decoder_params_;
+
+    std::vector<pcstdc::PolarEncoder> encoders_;
+    std::vector<pcstdc::SCDecoder> decoders_;
 
     size_t simulation_count_;
     std::vector<long double> average_capacities_;
