@@ -81,9 +81,9 @@ namespace utl
                         auto y = channel.send(x);
                         auto m_hat = decoder.decode(y);
 
-                        Eigen::RowVectorXi e = m + m_hat;
-                        for (int i = 0; i < e.size(); ++i) {
-                            e[i] = e[i] % 2;
+                        Eigen::RowVectorXi e(m.size());
+                        for (int i = 0; i < m.size(); ++i) {
+                            e[i] = m[i] ^ m_hat[i];
                         }
 
                         distance += e.sum();
