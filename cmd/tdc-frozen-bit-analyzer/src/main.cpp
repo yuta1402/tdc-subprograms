@@ -93,8 +93,8 @@ int main(int argc, char* argv[])
     decoder_params.info_length = info_length;
     decoder_params.num_segments = num_segments;
 
-    FrozeBitAnalyzer analyzer(code_length, info_length, tdc, decoder_params, num_frozen_bit_simulations, num_epochs);
-    analyzer.parallel_analyze(num_threads);
+    FrozeBitAnalyzer analyzer(code_length, info_length, tdc, decoder_params, num_frozen_bit_simulations, num_epochs, num_threads);
+    analyzer.parallel_analyze();
 
     // channel::TD2CParams params;
     // params.pi = pi;

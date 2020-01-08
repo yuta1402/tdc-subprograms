@@ -1,5 +1,8 @@
 #include <fstream>
 #include <iomanip>
+#include <future>
+#include <thread>
+#include <vector>
 #include "estd/random.hpp"
 #include "estd/parallel.hpp"
 #include "frozen_bit_analyzer.hpp"
@@ -111,11 +114,12 @@ namespace
     }
 }
 
-FrozeBitAnalyzer::FrozeBitAnalyzer(const size_t code_length, const size_t info_length, const channel::TDC& channel, const pcstdc::SCDecoderParams& decoder_params, const size_t num_simulation, const size_t num_epoch) :
+FrozeBitAnalyzer::FrozeBitAnalyzer(const size_t code_length, const size_t info_length, const channel::TDC& channel, const pcstdc::SCDecoderParams& decoder_params, const size_t num_simulation, const size_t num_epoch, const size_t num_threads) :
     code_length_{ code_length },
     info_length_{ info_length },
     num_simulation_{ num_simulation },
     num_epoch_{ num_epoch },
+    num_threads_{ num_threads },
     channel_{ channel },
     decoder_params_{ decoder_params },
     simulation_count_{ 0 },
@@ -126,118 +130,86 @@ FrozeBitAnalyzer::FrozeBitAnalyzer(const size_t code_length, const size_t info_l
 {
 }
 
-void FrozeBitAnalyzer::step()
-{
-    const std::vector<int> tmp(code_length_, 0);
-    const size_t epoch_simulations = std::min(num_epoch_, num_simulation_ - simulation_count_);
-
-    std::vector<long double> sum_capacities(code_length_, 0.0);
-
-    for (size_t e = 0; e < epoch_simulations; ++e) {
-        Eigen::RowVectorXi z = Eigen::RowVectorXi::Zero(code_length_);
-        for (size_t j = 0; j < code_length_; ++j) {
-            z[j] = estd::Random(0, 1);
-        }
-
-        pcstdc::PolarEncoder encoder(code_length_, code_length_, tmp);
-        pcstdc::SCDecoder decoder(decoder_params_, channel_, tmp);
-
-        const auto& x = encoder.encode(z);
-        const auto& y = channel_.send(x);
-
-        pcstdc::InfoTableHandler u(code_length_);
-
-        for (size_t i = 0; i < code_length_; ++i) {
-            auto zz = z;
-            for (int j = i; j < zz.size(); ++j) {
-                zz[j] = 0;
-            }
-            u.init(zz);
-
-            const auto& ll = decoder.calc_likelihood(i, u, y);
-            const long double llg = ll[z[i]];
-            const long double llb = ll[z[i] ^ 1];
-            const long double sum = llg + llb;
-
-            long double c = 0.0;
-
-            if (llg != 0.0 && sum != 0.0) {
-                // 式変形: c = std::log2(llg/(0.5*llg+0.5*llb));
-                c = 1.0 + std::log2(llg) - std::log2(sum);
-                c = std::clamp(c, 0.0l, 1.0l);
-            }
-
-            sum_capacities[i] += c;
-        }
-    }
-
-    for (size_t i = 0; i < code_length_; ++i) {
-        const long double k = static_cast<long double>(simulation_count_) / (simulation_count_ + epoch_simulations);
-        average_capacities_[i] = (k * average_capacities_[i] + sum_capacities[i] / (simulation_count_ + epoch_simulations));
-    }
-
-    simulation_count_ += epoch_simulations;
-}
-
-void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
+void FrozeBitAnalyzer::parallel_step()
 {
     const std::vector<int> tmp(code_length_, false);
     const size_t epoch_simulations = std::min(num_epoch_, num_simulation_ - simulation_count_);
 
-    std::vector<long double> sum_capacities(code_length_, 0.0);
+    std::vector<std::future<std::pair<std::vector<long double>, std::vector<size_t>>>> futures;
 
-    std::mutex mtx;
+    for (size_t t = 0; t < num_threads_; ++t) {
+        auto seed = estd::Random();
 
-    estd::parallel_for_with_reseed(epoch_simulations, [this, &tmp, &sum_capacities, &mtx](const auto& e){
-        Eigen::RowVectorXi z = Eigen::RowVectorXi::Zero(code_length_);
-        for (size_t j = 0; j < code_length_; ++j) {
-            z[j] = estd::Random(0, 1);
-        }
+        futures.emplace_back(std::async(std::launch::async, [this, t, seed, epoch_simulations, &tmp](){
+            estd::Reseed(seed);
 
-        pcstdc::PolarEncoder encoder(code_length_, code_length_, tmp);
-        pcstdc::SCDecoder decoder(decoder_params_, channel_, tmp);
+            Eigen::RowVectorXi z = Eigen::RowVectorXi::Zero(code_length_);
 
-        const auto& x = encoder.encode(z);
-        const auto& y = channel_.send(x);
+            pcstdc::PolarEncoder encoder(code_length_, code_length_, tmp);
+            pcstdc::SCDecoder decoder(decoder_params_, channel_, tmp);
 
-        pcstdc::InfoTableHandler u(code_length_);
+            std::vector<long double> sum_capacities(code_length_, 0.0);
+            std::vector<size_t> error_bit_counts(code_length_, 0);
 
-        for (size_t i = 0; i < code_length_; ++i) {
-            auto zz = z;
-            for (int j = i; j < zz.size(); ++j) {
-                zz[j] = 0;
-            }
-            u.init(zz);
+            const size_t num_tasks = (epoch_simulations + t) / num_threads_;
+            for (size_t w = 0; w < num_tasks; ++w) {
+                decoder.init();
 
-            const auto& ll = decoder.calc_likelihood(i, u, y);
-            const long double llg = ll[z[i]];
-            const long double llb = ll[z[i] ^ 1];
-            const long double sum = llg + llb;
+                for (size_t j = 0; j < code_length_; ++j) {
+                    z[j] = estd::Random(0, 1);
+                }
 
-            long double c = 0.0;
+                const auto& x = encoder.encode(z);
+                const auto& y = channel_.send(x);
 
-            if (llg != 0.0 && sum != 0.0) {
-                // 式変形: c = std::log2(llg/(0.5*llg+0.5*llb));
-                c = 1.0 + std::log2(llg) - std::log2(sum);
-                c = std::clamp(c, 0.0l, 1.0l);
-            }
+                pcstdc::InfoTableHandler u(code_length_);
 
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                sum_capacities[i] += c;
-
-                if (z[i] == 0) {
-                    if (ll[0] < ll[1]) {
-                        error_bit_counts_[i]++;
+                for (size_t i = 0; i < code_length_; ++i) {
+                    auto zz = z;
+                    for (int j = i; j < zz.size(); ++j) {
+                        zz[j] = 0;
                     }
-                } else {
-                    if (ll[1] <= ll[0]) {
-                        error_bit_counts_[i]++;
+                    u.init(zz);
+
+                    const auto& ll = decoder.calc_likelihood(i, u, y);
+                    const long double llg = ll[z[i]];
+                    const long double llb = ll[z[i] ^ 1];
+                    const long double sum = llg + llb;
+
+                    long double c = 0.0;
+
+                    if (llg != 0.0 && sum != 0.0) {
+                        // 式変形: c = std::log2(llg/(0.5*llg+0.5*llb));
+                        c = 1.0 + std::log2(llg) - std::log2(sum);
+                        c = std::clamp(c, 0.0l, 1.0l);
+                    }
+
+                    sum_capacities[i] += c;
+
+                    if (z[i] == 0) {
+                        if (ll[0] < ll[1]) {
+                            error_bit_counts[i]++;
+                        }
+                    } else {
+                        if (ll[1] <= ll[0]) {
+                            error_bit_counts[i]++;
+                        }
                     }
                 }
             }
+            return std::make_pair(sum_capacities, error_bit_counts);
+        }));
+    }
+
+    std::vector<long double> sum_capacities(code_length_, 0.0);
+
+    for (auto& f : futures) {
+        auto [c, ebc] = f.get();
+        for (size_t i = 0; i < code_length_; ++i) {
+            sum_capacities[i] += c[i];
+            error_bit_counts_[i] += ebc[i];
         }
-    }, num_threads);
+    }
 
     for (size_t i = 0; i < code_length_; ++i) {
         const long double k = static_cast<long double>(simulation_count_) / (simulation_count_ + epoch_simulations);
@@ -247,29 +219,7 @@ void FrozeBitAnalyzer::parallel_step(const size_t num_threads)
     simulation_count_ += epoch_simulations;
 }
 
-void FrozeBitAnalyzer::analyze()
-{
-    std::cout << "simulations, hamming distance" << std::endl;
-
-    while (simulation_count_ < num_simulation_) {
-        step();
-
-        const auto& capacities = calc_capacity(average_capacities_);
-        auto current_frozen_bits = make_frozen_bits(capacities, info_length_);
-        size_t d = calc_hamming_distance(prev_frozen_bits_, current_frozen_bits);
-
-        std::cout << std::setw(utl::num_digits(num_simulation_)) << std::right << simulation_count_
-            << ", "
-            << std::setw(utl::num_digits(code_length_)) << std::right << d
-            << std::endl;
-
-        std::swap(prev_frozen_bits_, current_frozen_bits);
-
-        save_capacity(code_length_, simulation_count_, channel_.params(), decoder_params_, capacities);
-    }
-}
-
-void FrozeBitAnalyzer::parallel_analyze(const size_t num_threads)
+void FrozeBitAnalyzer::parallel_analyze()
 {
     if (read_cache()) {
         std::cout << "find cache file: " << cache_filename_ << std::endl;
@@ -278,7 +228,7 @@ void FrozeBitAnalyzer::parallel_analyze(const size_t num_threads)
     std::cout << "simulations, hamming distance, bec, bler, ber" << std::endl;
 
     while (simulation_count_ < num_simulation_) {
-        parallel_step(num_threads);
+        parallel_step();
 
         const auto& capacities = calc_capacity(average_capacities_);
         auto current_frozen_bits = make_frozen_bits(capacities, info_length_);
