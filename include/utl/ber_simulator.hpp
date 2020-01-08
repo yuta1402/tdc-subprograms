@@ -3,6 +3,10 @@
 
 #include <iostream>
 #include <iomanip>
+#include <future>
+#include <vector>
+#include <utility>
+#include <thread>
 #include <Eigen/Core>
 #include "estd/parallel.hpp"
 #include "utl/utility.hpp"
@@ -39,54 +43,67 @@ namespace utl
     public:
         BERSimulator(const BERSimulatorOptions& options, const Channel& channel, const Encoder& encoder, const Decoder& decoder) :
             options_{ options },
-            channel_{ channel },
-            encoder_{ encoder },
-            decoder_{ decoder },
+            channels_( options.num_threads, channel ),
+            encoders_( options.num_threads, encoder ),
+            decoders_( options.num_threads, decoder ),
             result_{}
         {
         }
 
         ~BERSimulator() = default;
 
-        bool step()
+        void step()
         {
-            std::vector<size_t> distances(options_.num_epochs);
+            std::vector<std::future<std::pair<size_t, size_t>>> futures;
 
-            estd::parallel_for_with_reseed(options_.num_epochs, [this, &distances](const auto& t){
-                Eigen::RowVectorXi m = Eigen::RowVectorXi::Zero(options_.info_length);
-                for (size_t i = 0; i < options_.info_length; ++i) {
-                    m[i] = estd::Random(0, 1);
-                }
+            for (size_t t = 0; t < options_.num_threads; ++t) {
+                auto seed = estd::Random();
 
-                auto x = encoder_.encode(m);
-                auto y = channel_.send(x);
+                futures.emplace_back(std::async(std::launch::async, [this, t, seed](){
+                    estd::Reseed(seed);
 
-                // 別スレッド間でメンバ変数を共有してしまう可能性があるためコピーを作成
-                Decoder decoder(decoder_);
-                auto m_hat = decoder.decode(y);
+                    Eigen::RowVectorXi m = Eigen::RowVectorXi::Zero(options_.info_length);
 
-                Eigen::RowVectorXi e = m + m_hat;
-                for (size_t i = 0; i < e.size(); ++i) {
-                    e[i] = e[i] % 2;
-                }
+                    auto&& channel = channels_[t];
+                    auto&& encoder = encoders_[t];
+                    auto&& decoder = decoders_[t];
 
-                distances[t] = e.sum();
-            }, options_.num_threads);
+                    size_t distance = 0;
+                    size_t wec = 0;
 
-            for (const auto& d : distances) {
-                ++result_.simulation_count;
+                    const size_t num_tasks = (options_.num_epochs + t) / options_.num_threads;
+                    for (size_t w = 0; w < num_tasks; ++w) {
+                        for (size_t i = 0; i < options_.info_length; ++i) {
+                            m[i] = estd::Random(0, 1);
+                        }
 
-                if (d > 0) {
-                    result_.bit_error_count += d;
-                    ++result_.word_error_count;
-                }
+                        auto x = encoder.encode(m);
+                        auto y = channel.send(x);
+                        auto m_hat = decoder.decode(y);
 
-                if (result_.word_error_count >= options_.min_num_error_words) {
-                    return true;
-                }
+                        Eigen::RowVectorXi e = m + m_hat;
+                        for (int i = 0; i < e.size(); ++i) {
+                            e[i] = e[i] % 2;
+                        }
+
+                        distance += e.sum();
+                        if (e.sum() > 0) {
+                            ++wec;
+                        }
+                    }
+
+                    return std::make_pair(distance, wec);
+                }));
             }
 
-            return false;
+            for (auto& f : futures) {
+                auto [d, wec] = f.get();
+
+                result_.bit_error_count += d;
+                result_.word_error_count += wec;
+            }
+
+            result_.simulation_count += options_.num_epochs;
         }
 
         const BERSimulatorResult& simulate()
@@ -94,11 +111,15 @@ namespace utl
             std::cout << "simulations, wec, bec, bler, ber, progress rate" << std::endl;
 
             while (true) {
+                if (result_.word_error_count >= options_.min_num_error_words) {
+                    break;
+                }
+
                 if (result_.simulation_count >= options_.max_num_simulations) {
                     break;
                 }
 
-                bool is_end = step();
+                step();
 
                 result_.ber  = static_cast<double>(result_.bit_error_count) / (options_.code_length * result_.simulation_count);
                 result_.bler = static_cast<double>(result_.word_error_count) / result_.simulation_count;
@@ -120,10 +141,6 @@ namespace utl
                     << Delimiter << result_.ber
                     << Delimiter << std::setw(3) << std::right << static_cast<int>(progress_rate * 100) << "%"
                     << std::endl;
-
-                if (is_end) {
-                    break;
-                }
             }
 
             return result_;
@@ -132,9 +149,9 @@ namespace utl
     private:
         const BERSimulatorOptions& options_;
 
-        const Channel& channel_;
-        const Encoder& encoder_;
-        const Decoder& decoder_;
+        std::vector<Channel> channels_;
+        std::vector<Encoder> encoders_;
+        std::vector<Decoder> decoders_;
 
         BERSimulatorResult result_;
     };
