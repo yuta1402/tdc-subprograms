@@ -34,33 +34,74 @@ namespace
         return p;
     }
 
-    std::vector<double> calc_lambda(const size_t code_length, const int max_segment, const tdcs::DriftTransitionProb& dtp, const std::vector<estd::nivector<double>>& upwards)
+    std::vector<double> calc_z_lambda(const size_t code_length, const int max_segment, const tdcs::DriftTransitionProb& dtp, const TDCCapacityCalculator::Params& params, const channel::TDC& tdc, const Eigen::RowVectorXi& z)
     {
         // sumが0の場合はlambdaがinfなので、予めinfで初期化しておく
         std::vector<double> lambda(code_length, std::numeric_limits<double>::infinity());
 
-        std::vector<estd::nivector<double>> mu(
-            code_length, estd::nivector<double>(-max_segment, max_segment, 0.0)
-        );
+        estd::nivector<double> prev_mu(-max_segment, max_segment, 0.0);
 
-        mu[0][0] = 1.0;
+        prev_mu[0] = 1.0;
         lambda[0] = 1.0;
 
         for (size_t k = 1; k < code_length; ++k) {
             double sum = 0.0;
+            estd::nivector<double> curr_mu(-max_segment, max_segment, 0.0);
 
             for (const auto& [dj, dk, dp] : dtp.not_zero_range()) {
-                sum += mu[k-1][dj] * dp * upwards[k-1][dj];
-                mu[k][dk] += mu[k-1][dj] * dp * upwards[k-1][dj];
+                const double g0 = calc_gk(k-1, dj, 0, z, tdc, params);
+                const double g1 = calc_gk(k-1, dj, 1, z, tdc, params);
+                const double upward = 0.5 * (g0 + g1);
+
+                sum += prev_mu[dj] * dp * upward;
+                curr_mu[dk] += prev_mu[dj] * dp * upward;
             }
 
             // normalization
             if (sum != 0.0) {
                 lambda[k] = 1.0 / sum;
                 for (int dk = -max_segment; dk <= max_segment; ++dk) {
-                    mu[k][dk] *= lambda[k];
+                    curr_mu[dk] *= lambda[k];
                 }
             }
+
+            std::swap(prev_mu, curr_mu);
+        }
+
+        return lambda;
+    }
+
+
+    std::vector<double> calc_xz_lambda(const size_t code_length, const int max_segment, const tdcs::DriftTransitionProb& dtp, const TDCCapacityCalculator::Params& params, const channel::TDC& tdc, const Eigen::RowVectorXi& x, const Eigen::RowVectorXi& z)
+    {
+        // sumが0の場合はlambdaがinfなので、予めinfで初期化しておく
+        std::vector<double> lambda(code_length, std::numeric_limits<double>::infinity());
+
+        estd::nivector<double> prev_mu(-max_segment, max_segment, 0.0);
+
+        prev_mu[0] = 1.0;
+        lambda[0] = 1.0;
+
+        for (size_t k = 1; k < code_length; ++k) {
+            double sum = 0.0;
+            estd::nivector<double> curr_mu(-max_segment, max_segment, 0.0);
+
+            for (const auto& [dj, dk, dp] : dtp.not_zero_range()) {
+                const double upward = 0.5 * calc_gk(k-1, dj, x[k-1], z, tdc, params);
+
+                sum += prev_mu[dj] * dp * upward;
+                curr_mu[dk] += prev_mu[dj] * dp * upward;
+            }
+
+            // normalization
+            if (sum != 0.0) {
+                lambda[k] = 1.0 / sum;
+                for (int dk = -max_segment; dk <= max_segment; ++dk) {
+                    curr_mu[dk] *= lambda[k];
+                }
+            }
+
+            std::swap(prev_mu, curr_mu);
         }
 
         return lambda;
@@ -130,15 +171,13 @@ double TDCCapacityCalculator::parallel_calculate(const size_t num_threads)
 
         double logpz;
         {
-            const auto& upwards = calc_z_upwards(max_segment_, params_, tdc_, z);
-            const auto& lambda = calc_lambda(params_.code_length, max_segment_, dtp_, upwards);
+            const auto& lambda = calc_z_lambda(params_.code_length, max_segment_, dtp_, params_, tdc_, z);
             logpz = calc_logp(lambda);
         }
 
         double logpxz;
         {
-            const auto& upwards = calc_xz_upwards(max_segment_, params_, tdc_, x, z);
-            const auto& lambda = calc_lambda(params_.code_length, max_segment_, dtp_, upwards);
+            const auto& lambda = calc_xz_lambda(params_.code_length, max_segment_, dtp_, params_, tdc_, x, z);
             logpxz = calc_logp(lambda);
         }
 
@@ -149,9 +188,16 @@ double TDCCapacityCalculator::parallel_calculate(const size_t num_threads)
     }, num_threads);
 
     double sum = 0.0;
+    double min_c =  2.0;
+    double max_c = -2.0;
     for (const auto& c : capacities) {
         sum += c;
+
+        min_c = std::min(min_c, c);
+        max_c = std::max(max_c, c);
     }
+
+    std::cout << min_c << ' ' << max_c << std::endl;
 
     const double c = sum / capacities.size();
     return c;
